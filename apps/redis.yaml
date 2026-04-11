@@ -18,7 +18,7 @@ spec:
         fullnameOverride: redis
         architecture: standalone
         auth:
-          existingSecret: infisical-secrets
+          existingSecret: database-credentials
           existingSecretPasswordKey: REDIS_PASSWORD
         master:
           persistence:
@@ -26,7 +26,7 @@ spec:
             size: 2Gi
   destination:
     server: https://kubernetes.default.svc
-    namespace: infisical
+    namespace: databases
   syncPolicy:
     automated:
       prune: true

@@ -65,28 +65,41 @@ kubectl create secret generic cloudflare-api-token \
 
 > This secret is temporary. Once Infisical is running it will be replaced by the `InfisicalSecret` in `manifests/infisical-secrets/cloudflare.yaml`.
 
-### Infisical bootstrap credentials
+### Database credentials
+
+Used by the Bitnami PostgreSQL and Redis Helm charts for auth. Both charts live in the `databases` namespace.
 
 ```sh
-kubectl create namespace infisical
+kubectl create namespace databases
 
 POSTGRES_PASS=$(openssl rand -base64 24 | tr -d '=+/')
 POSTGRES_ADMIN_PASS=$(openssl rand -base64 24 | tr -d '=+/')
 REDIS_PASS=$(openssl rand -base64 24 | tr -d '=+/')
 
-kubectl create secret generic infisical-secrets \
-  --namespace infisical \
-  --from-literal=ENCRYPTION_KEY=$(openssl rand -hex 16) \
-  --from-literal=AUTH_SECRET=$(openssl rand -base64 32) \
-  --from-literal=DB_CONNECTION_URI="postgresql://infisical:${POSTGRES_PASS}@postgresql:5432/infisicalDB" \
-  --from-literal=REDIS_URL="redis://:${REDIS_PASS}@redis-master:6379/0" \
-  --from-literal=SITE_URL="https://infisical.wuguishifu.dev" \
-  --from-literal=POSTGRES_PASSWORD="${POSTGRES_PASS}" \
+kubectl create secret generic database-credentials \
+  --namespace databases \
   --from-literal=POSTGRES_ADMIN_PASSWORD="${POSTGRES_ADMIN_PASS}" \
+  --from-literal=POSTGRES_PASSWORD="${POSTGRES_PASS}" \
   --from-literal=REDIS_PASSWORD="${REDIS_PASS}"
 ```
 
 > Save the generated values in a password manager. They cannot be recovered if lost.
+
+### Infisical bootstrap credentials
+
+Uses the passwords generated above. The connection strings use cross-namespace DNS to reach postgres and redis in the `databases` namespace.
+
+```sh
+kubectl create namespace infisical
+
+kubectl create secret generic infisical-secrets \
+  --namespace infisical \
+  --from-literal=ENCRYPTION_KEY=$(openssl rand -hex 16) \
+  --from-literal=AUTH_SECRET=$(openssl rand -base64 32) \
+  --from-literal=DB_CONNECTION_URI="postgresql://infisical:${POSTGRES_PASS}@postgresql.databases.svc.cluster.local:5432/infisicalDB" \
+  --from-literal=REDIS_URL="redis://:${REDIS_PASS}@redis-master.databases.svc.cluster.local:6379/0" \
+  --from-literal=SITE_URL="https://infisical.wuguishifu.dev"
+```
 
 ## 5. Add a DNS record in Cloudflare
 

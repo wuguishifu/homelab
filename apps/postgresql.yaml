@@ -19,7 +19,7 @@ spec:
         auth:
           username: infisical
           database: infisicalDB
-          existingSecret: infisical-secrets
+          existingSecret: database-credentials
           secretKeys:
             adminPasswordKey: POSTGRES_ADMIN_PASSWORD
             userPasswordKey: POSTGRES_PASSWORD
@@ -29,7 +29,7 @@ spec:
             size: 8Gi
   destination:
     server: https://kubernetes.default.svc
-    namespace: infisical
+    namespace: databases
   syncPolicy:
     automated:
       prune: true

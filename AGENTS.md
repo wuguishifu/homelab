@@ -22,8 +22,8 @@ apps/                        # ArgoCD Application resources (App-of-Apps pattern
   root.yaml                  # Applied once manually — discovers all other apps/ files
   cert-manager.yaml
   cert-manager-config.yaml
-  postgresql.yaml            # Standalone Bitnami PostgreSQL (used by Infisical)
-  redis.yaml                 # Standalone Bitnami Redis (used by Infisical)
+  postgresql.yaml            # Shared Bitnami PostgreSQL (namespace: databases)
+  redis.yaml                 # Shared Bitnami Redis (namespace: databases)
   infisical.yaml
   infisical-operator.yaml
   infisical-secrets.yaml     # Deploys InfisicalSecret CRDs from manifests/infisical-secrets/
@@ -54,7 +54,12 @@ Secrets follow a strict hierarchy:
 Infisical UI  →  InfisicalSecret CRD  →  Kubernetes Secret  →  App
 ```
 
-**The only manually created secret** is `infisical-secrets` in the `infisical` namespace. It bootstraps Infisical itself (ENCRYPTION_KEY, AUTH_SECRET, DB_CONNECTION_URI, REDIS_URL, SITE_URL, POSTGRES_PASSWORD, POSTGRES_ADMIN_PASSWORD, REDIS_PASSWORD) and is never stored in Git. See `BOOTSTRAP.md` for how it is created.
+**Two secrets are created manually and never stored in Git:**
+
+- `database-credentials` in `databases` namespace — holds `POSTGRES_ADMIN_PASSWORD`, `POSTGRES_PASSWORD`, and `REDIS_PASSWORD`; used by the Bitnami PostgreSQL and Redis Helm charts for auth
+- `infisical-secrets` in `infisical` namespace — bootstraps Infisical itself (ENCRYPTION_KEY, AUTH_SECRET, DB_CONNECTION_URI, REDIS_URL, SITE_URL); uses cross-namespace DNS to reach postgres and redis in `databases`
+
+See `BOOTSTRAP.md` for how these are created.
 
 Everything else goes through Infisical:
 
