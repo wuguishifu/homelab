@@ -1,0 +1,57 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: thermo-automation-statuses
+  namespace: thermo-automation
+spec:
+  schedule: "*/3 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: curl
+              image: curlimages/curl:latest
+              env:
+                - name: THERMO_AUTOMATION_API_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: thermo-automation-secrets
+                      key: THERMO_AUTOMATION_API_KEY
+              command:
+                - curl
+                - -X
+                - POST
+                - -H
+                - "Authorization: Bearer $(THERMO_AUTOMATION_API_KEY)"
+                - http://thermo-automation:3000/api/jobs/statuses
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: thermo-automation-control
+  namespace: thermo-automation
+spec:
+  schedule: "*/3 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: curl
+              image: curlimages/curl:latest
+              env:
+                - name: THERMO_AUTOMATION_API_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: thermo-automation-secrets
+                      key: THERMO_AUTOMATION_API_KEY
+              command:
+                - curl
+                - -X
+                - POST
+                - -H
+                - "Authorization: Bearer $(THERMO_AUTOMATION_API_KEY)"
+                - http://thermo-automation:3000/api/jobs/automation
