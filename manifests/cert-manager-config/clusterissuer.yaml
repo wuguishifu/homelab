@@ -1,0 +1,19 @@
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-prod
+spec:
+  acme:
+    # Replace with your email address — used for Let's Encrypt expiry notices
+    email: bo@bramer.dev
+    server: https://acme-v02.api.letsencrypt.org/directory
+    privateKeySecretRef:
+      name: letsencrypt-prod-account-key
+    solvers:
+      - dns01:
+          cloudflare:
+            # API token secret — created manually before bootstrapping
+            # See bootstrap instructions for how to create this secret
+            apiTokenSecretRef:
+              name: cloudflare-api-token
+              key: api-token
