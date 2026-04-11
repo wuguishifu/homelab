@@ -5,7 +5,8 @@ metadata:
   namespace: infisical-operator-system
 spec:
   hostAPI: https://infisical.wuguishifu.dev/api
-  resyncInterval: 60
+  syncConfig:
+    resyncInterval: 60s
 
   authentication:
     universalAuth:
@@ -17,9 +18,8 @@ spec:
       credentialsRef:
         secretName: infisical-machine-identity
         secretNamespace: infisical-operator-system
-        # Created manually after Infisical is running — see bootstrap instructions
       secretsScope:
-        projectSlug: homelab   # your Infisical project slug
+        projectSlug: homelab
         envSlug: prod
         # Store the cloudflare token at path /cert-manager with key: api-token
         secretsPath: /cert-manager
