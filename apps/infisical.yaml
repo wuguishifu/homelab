@@ -4,7 +4,7 @@ metadata:
   name: infisical
   namespace: argocd
   annotations:
-    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-wave: "2"
   finalizers:
     - resources-finalizer.argocd.io
 spec:
@@ -41,15 +41,8 @@ spec:
                 - infisical.wuguishifu.dev
 
         postgresql:
-          fullnameOverride: postgresql
-          auth:
-            username: infisical
-            database: infisicalDB
-            existingSecret: infisical-secrets
-            secretKeys:
-              adminPasswordKey: POSTGRES_ADMIN_PASSWORD
-              userPasswordKey: POSTGRES_PASSWORD
-          # Force Infisical to use our connection string instead of the chart-generated one
+          # Disabled — deployed as a separate ArgoCD app so auth is managed via existingSecret
+          enabled: false
           useExistingPostgresSecret:
             enabled: true
             existingConnectionStringSecret:
@@ -57,11 +50,8 @@ spec:
               key: DB_CONNECTION_URI
 
         redis:
-          fullnameOverride: redis
-          architecture: standalone
-          auth:
-            existingSecret: infisical-secrets
-            existingSecretPasswordKey: REDIS_PASSWORD
+          # Disabled — deployed as a separate ArgoCD app so auth is managed via existingSecret
+          enabled: false
   destination:
     server: https://kubernetes.default.svc
     namespace: infisical

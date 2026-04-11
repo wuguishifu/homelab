@@ -1,0 +1,38 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: postgresql
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+  finalizers:
+    - resources-finalizer.argocd.io
+spec:
+  project: default
+  source:
+    repoURL: https://charts.bitnami.com/bitnami
+    chart: postgresql
+    targetRevision: 18.5.16
+    helm:
+      values: |
+        fullnameOverride: postgresql
+        auth:
+          username: infisical
+          database: infisicalDB
+          existingSecret: infisical-secrets
+          secretKeys:
+            adminPasswordKey: POSTGRES_ADMIN_PASSWORD
+            userPasswordKey: POSTGRES_PASSWORD
+        primary:
+          persistence:
+            enabled: true
+            size: 8Gi
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: infisical
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
