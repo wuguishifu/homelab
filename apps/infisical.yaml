@@ -1,0 +1,73 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: infisical
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+  finalizers:
+    - resources-finalizer.argocd.io
+spec:
+  project: default
+  source:
+    repoURL: https://dl.cloudsmith.io/public/infisical/helm-charts/helm/charts/
+    chart: infisical-standalone
+    targetRevision: 1.8.0
+    helm:
+      values: |
+        infisical:
+          replicaCount: 1
+          image:
+            repository: infisical/infisical
+            tag: "v0.158.0"
+            pullPolicy: IfNotPresent
+          # References the manually-created bootstrap secret (never stored in Git).
+          # This secret is mounted as env vars — must contain ENCRYPTION_KEY, AUTH_SECRET,
+          # DB_CONNECTION_URI, REDIS_URL, and SITE_URL.
+          kubeSecretRef: infisical-secrets
+
+        ingress:
+          enabled: true
+          ingressClassName: traefik
+          annotations:
+            cert-manager.io/cluster-issuer: letsencrypt-prod
+          hostName: infisical.wuguishifu.dev
+          # Disable the bundled nginx — we use Traefik
+          nginx:
+            enabled: false
+          tls:
+            - secretName: infisical-tls
+              hosts:
+                - infisical.wuguishifu.dev
+
+        postgresql:
+          fullnameOverride: postgresql
+          auth:
+            username: infisical
+            database: infisicalDB
+            existingSecret: infisical-secrets
+            secretKeys:
+              adminPasswordKey: POSTGRES_ADMIN_PASSWORD
+              userPasswordKey: POSTGRES_PASSWORD
+
+        redis:
+          fullnameOverride: redis
+          architecture: standalone
+          auth:
+            existingSecret: infisical-secrets
+            existingSecretPasswordKey: REDIS_PASSWORD
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: infisical
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 5m

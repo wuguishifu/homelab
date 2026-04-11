@@ -1,0 +1,31 @@
+apiVersion: secrets.infisical.com/v1alpha1
+kind: InfisicalSecret
+metadata:
+  name: cloudflare-api-token
+  namespace: infisical-operator-system
+spec:
+  hostAPI: https://infisical.wuguishifu.dev/api
+  resyncInterval: 60
+
+  authentication:
+    universalAuth:
+      # Machine identity credentials — created manually after Infisical is running
+      # kubectl create secret generic infisical-machine-identity \
+      #   --namespace infisical-operator-system \
+      #   --from-literal=clientId=<CLIENT_ID> \
+      #   --from-literal=clientSecret=<CLIENT_SECRET>
+      credentialsRef:
+        secretName: infisical-machine-identity
+        secretNamespace: infisical-operator-system
+        # Created manually after Infisical is running — see bootstrap instructions
+      secretsScope:
+        projectSlug: homelab   # your Infisical project slug
+        envSlug: prod
+        # Store the cloudflare token at path /cert-manager with key: api-token
+        secretsPath: /cert-manager
+        recursive: false
+
+  managedSecretReference:
+    secretName: cloudflare-api-token
+    secretNamespace: cert-manager
+    secretType: Opaque
