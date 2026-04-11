@@ -49,6 +49,12 @@ spec:
             secretKeys:
               adminPasswordKey: POSTGRES_ADMIN_PASSWORD
               userPasswordKey: POSTGRES_PASSWORD
+          # Force Infisical to use our connection string instead of the chart-generated one
+          useExistingPostgresSecret:
+            enabled: true
+            existingConnectionStringSecret:
+              name: infisical-secrets
+              key: DB_CONNECTION_URI
 
         redis:
           fullnameOverride: redis
