@@ -28,11 +28,13 @@ apps/                        # ArgoCD Application resources (App-of-Apps pattern
   infisical-operator.yaml
   infisical-secrets.yaml     # Deploys InfisicalSecret CRDs from manifests/infisical-secrets/
   argocd-config.yaml
+  thermo-automation.yaml     # Daikin thermostat automation service
 
 manifests/                   # Kubernetes manifests applied by ArgoCD apps
   argocd-config/             # ArgoCD ingress + insecure mode configmap
   cert-manager-config/       # ClusterIssuer (letsencrypt-prod, Cloudflare DNS-01)
   infisical-secrets/         # InfisicalSecret CRDs — one file per secret group
+  thermo-automation/         # Deployment for thermo-automation
 ```
 
 ## Sync Wave Order
@@ -45,6 +47,7 @@ Apps deploy in waves to respect dependencies:
 | 1    | cert-manager-config, postgresql, redis       |
 | 2    | argocd-config, infisical, infisical-operator |
 | 3    | infisical-secrets                            |
+| 4    | thermo-automation                            |
 
 ## Secrets Architecture
 

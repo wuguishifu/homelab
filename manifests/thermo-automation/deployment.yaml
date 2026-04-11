@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: thermo-automation
+  namespace: thermo-automation
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: thermo-automation
+  template:
+    metadata:
+      labels:
+        app: thermo-automation
+    spec:
+      initContainers:
+        - name: migrate
+          image: ghcr.io/wuguishifu/thermo-automation-migration:latest
+          envFrom:
+            - secretRef:
+                name: thermo-automation-secrets
+      containers:
+        - name: thermo-automation
+          image: ghcr.io/wuguishifu/thermo-automation:latest
+          env:
+            - name: EMAIL
+              value: bramer.bo@gmail.com
+            - name: TIMEZONE
+              value: America/Los_Angeles
+          envFrom:
+            - secretRef:
+                name: thermo-automation-secrets
