@@ -63,6 +63,68 @@ spec:
 apiVersion: batch/v1
 kind: CronJob
 metadata:
+  name: sensitive-db-backup-daily
+  namespace: databases
+spec:
+  schedule: "0 3 * * *"
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          volumes:
+            - name: backup-data
+              emptyDir: {}
+            - name: scripts
+              configMap:
+                name: backup-config
+          initContainers:
+            - name: dump
+              image: postgres:18-alpine
+              command: ["sh", "/scripts/dump-sensitive.sh"]
+              envFrom:
+                - configMapRef:
+                    name: backup-config
+                - secretRef:
+                    name: databases-backup-secrets
+              volumeMounts:
+                - name: backup-data
+                  mountPath: /backup
+                - name: scripts
+                  mountPath: /scripts
+          containers:
+            - name: upload
+              image: amazon/aws-cli:latest
+              command: ["sh", "/scripts/upload-sensitive.sh"]
+              env:
+                - name: BACKUP_PREFIX
+                  value: daily
+                - name: AWS_ACCESS_KEY_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: databases-backup-secrets
+                      key: SECRETS_R2_ACCESS_KEY_ID
+                - name: AWS_SECRET_ACCESS_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: databases-backup-secrets
+                      key: SECRETS_R2_SECRET_ACCESS_KEY
+              envFrom:
+                - configMapRef:
+                    name: backup-config
+                - secretRef:
+                    name: databases-backup-secrets
+              volumeMounts:
+                - name: backup-data
+                  mountPath: /backup
+                - name: scripts
+                  mountPath: /scripts
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
   name: db-backup-daily
   namespace: databases
 spec:

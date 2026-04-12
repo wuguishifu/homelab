@@ -13,6 +13,10 @@ data:
   # R2 uses a fixed pseudo-region — do not change
   AWS_DEFAULT_REGION: "auto"
 
+  # Sensitive databases — encrypted before upload, stored in the secrets bucket
+  SENSITIVE_DATABASES: "infisicalDB vaultwarden"
+  SECRETS_R2_BUCKET: "secrets"
+
   dump.sh: |
     #!/bin/sh
     set -eu
@@ -38,4 +42,37 @@ data:
         "s3://${R2_BUCKET}/${BACKUP_PREFIX}/${db}/${TIMESTAMP}.sql.gz" \
         --endpoint-url "$ENDPOINT"
       echo "Uploaded: ${BACKUP_PREFIX}/${db}/${TIMESTAMP}.sql.gz"
+    done
+
+  dump-sensitive.sh: |
+    #!/bin/sh
+    set -eu
+    for db in $SENSITIVE_DATABASES; do
+      echo "Dumping ${db}..."
+      PGPASSWORD="$POSTGRES_ADMIN_PASSWORD" pg_dump \
+        -h "$POSTGRES_HOST" \
+        -p "$POSTGRES_PORT" \
+        -U "$POSTGRES_USER" \
+        "$db" > "/backup/${db}.sql"
+      gzip "/backup/${db}.sql"
+      echo "Encrypting ${db}..."
+      openssl enc -aes-256-cbc -pbkdf2 -iter 100000 \
+        -in "/backup/${db}.sql.gz" \
+        -out "/backup/${db}.sql.gz.enc" \
+        -pass env:BACKUP_ENCRYPTION_PASSPHRASE
+      rm "/backup/${db}.sql.gz"
+      echo "Done: ${db}"
+    done
+
+  upload-sensitive.sh: |
+    #!/bin/sh
+    set -eu
+    TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+    ENDPOINT="https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
+    for db in $SENSITIVE_DATABASES; do
+      echo "Uploading ${db}..."
+      aws s3 cp "/backup/${db}.sql.gz.enc" \
+        "s3://${SECRETS_R2_BUCKET}/${BACKUP_PREFIX}/${db}/${TIMESTAMP}.sql.gz.enc" \
+        --endpoint-url "$ENDPOINT"
+      echo "Uploaded: ${BACKUP_PREFIX}/${db}/${TIMESTAMP}.sql.gz.enc"
     done
