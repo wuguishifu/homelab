@@ -20,7 +20,7 @@ spec:
                 name: backup-config
           initContainers:
             - name: dump
-              image: postgres:16-alpine
+              image: postgres:18-alpine
               command: ["sh", "/scripts/dump.sh"]
               envFrom:
                 - configMapRef:
@@ -82,7 +82,7 @@ spec:
                 name: backup-config
           initContainers:
             - name: dump
-              image: postgres:16-alpine
+              image: postgres:18-alpine
               command: ["sh", "/scripts/dump.sh"]
               envFrom:
                 - configMapRef:
