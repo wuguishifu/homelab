@@ -22,7 +22,8 @@ data:
         -h "$POSTGRES_HOST" \
         -p "$POSTGRES_PORT" \
         -U "$POSTGRES_USER" \
-        "$db" | gzip > "/backup/${db}.sql.gz"
+        "$db" > "/backup/${db}.sql"
+      gzip "/backup/${db}.sql"
       echo "Done: ${db}"
     done
 
