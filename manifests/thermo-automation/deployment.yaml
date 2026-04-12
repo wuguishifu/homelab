@@ -27,6 +27,11 @@ spec:
               value: bramer.bo@gmail.com
             - name: TIMEZONE
               value: America/Los_Angeles
+            - name: API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: thermo-automation-secrets
+                  key: THERMO_AUTOMATION_API_KEY
           envFrom:
             - secretRef:
                 name: thermo-automation-secrets
