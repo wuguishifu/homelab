@@ -31,6 +31,36 @@ spec:
                 secretKeyRef:
                   name: vaultwarden-secrets
                   key: ADMIN_TOKEN
+            - name: SMTP_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: vaultwarden-secrets
+                  key: SMTP_HOST
+            - name: SMTP_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: vaultwarden-secrets
+                  key: SMTP_PORT
+            - name: SMTP_SECURITY
+              valueFrom:
+                secretKeyRef:
+                  name: vaultwarden-secrets
+                  key: SMTP_SECURITY
+            - name: SMTP_FROM
+              valueFrom:
+                secretKeyRef:
+                  name: vaultwarden-secrets
+                  key: SMTP_FROM
+            - name: SMTP_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: vaultwarden-secrets
+                  key: SMTP_USERNAME
+            - name: SMTP_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: vaultwarden-secrets
+                  key: SMTP_PASSWORD
           ports:
             - containerPort: 80
           volumeMounts:
