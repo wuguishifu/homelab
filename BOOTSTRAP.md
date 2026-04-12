@@ -119,12 +119,12 @@ kubectl apply -f apps/root.yaml
 
 ArgoCD will discover all `apps/*.yaml` files and reconcile everything in sync-wave order:
 
-| Wave | Apps                                                                          |
-| ---- | ----------------------------------------------------------------------------- |
-| 0    | cert-manager                                                                  |
-| 1    | cert-manager-config (ClusterIssuer), postgresql, redis                        |
+| Wave | Apps                                                                            |
+| ---- | ------------------------------------------------------------------------------- |
+| 0    | cert-manager                                                                    |
+| 1    | cert-manager-config (ClusterIssuer), postgresql, redis                          |
 | 2    | argocd-config (ingress + TLS), infisical, infisical-operator (secrets-operator) |
-| 3    | infisical-secrets (InfisicalSecret CRDs)                                      |
+| 3    | infisical-secrets (InfisicalSecret CRDs)                                        |
 
 ## 7. Get the initial ArgoCD admin password
 
