@@ -1,0 +1,40 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backup-config
+  namespace: databases
+data:
+  # Space-separated list of databases to back up
+  DATABASES: "thermo_automation"
+  POSTGRES_HOST: "postgresql.databases.svc.cluster.local"
+  POSTGRES_PORT: "5432"
+  POSTGRES_USER: "postgres"
+  R2_BUCKET: "homelab-backups"
+  # R2 uses a fixed pseudo-region — do not change
+  AWS_DEFAULT_REGION: "auto"
+
+  dump.sh: |
+    #!/bin/sh
+    set -eu
+    for db in $DATABASES; do
+      echo "Dumping ${db}..."
+      PGPASSWORD="$POSTGRES_ADMIN_PASSWORD" pg_dump \
+        -h "$POSTGRES_HOST" \
+        -p "$POSTGRES_PORT" \
+        -U "$POSTGRES_USER" \
+        "$db" | gzip > "/backup/${db}.sql.gz"
+      echo "Done: ${db}"
+    done
+
+  upload.sh: |
+    #!/bin/sh
+    set -eu
+    TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+    ENDPOINT="https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
+    for db in $DATABASES; do
+      echo "Uploading ${db}..."
+      aws s3 cp "/backup/${db}.sql.gz" \
+        "s3://${R2_BUCKET}/${BACKUP_PREFIX}/${db}/${TIMESTAMP}.sql.gz" \
+        --endpoint-url "$ENDPOINT"
+      echo "Uploaded: ${BACKUP_PREFIX}/${db}/${TIMESTAMP}.sql.gz"
+    done
