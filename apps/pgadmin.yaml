@@ -1,0 +1,55 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: pgadmin
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+  finalizers:
+    - resources-finalizer.argocd.io
+spec:
+  project: default
+  source:
+    repoURL: https://helm.runix.net
+    chart: pgadmin4
+    targetRevision: 1.62.0
+    helm:
+      values: |
+        fullnameOverride: pgadmin
+        env:
+          email: bramer.bo@gmail.com
+        existingSecret: pgadmin-secrets
+        secretKeys:
+          pgadminPasswordKey: PGADMIN_DEFAULT_PASSWORD
+        persistentVolume:
+          enabled: true
+          size: 2Gi
+        ingress:
+          enabled: true
+          ingressClassName: traefik
+          annotations:
+            cert-manager.io/cluster-issuer: letsencrypt-prod
+          hosts:
+            - host: pgadmin.wuguishifu.dev
+              paths:
+                - path: /
+                  pathType: Prefix
+          tls:
+            - secretName: pgadmin-tls
+              hosts:
+                - pgadmin.wuguishifu.dev
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: databases
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 5m
