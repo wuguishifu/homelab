@@ -13,20 +13,28 @@ Before starting, you will need:
 
 ## Step 1 — Find and download the backup
 
-List available backups to find the timestamp you want:
+Replace `<db>` with `vaultwarden` or `infisicalDB`. Backups are mirrored to both Cloudflare R2 and Amazon S3 — use whichever is available.
+
+**From Cloudflare R2:**
 
 ```sh
-aws s3 ls s3://secrets/daily/<db>/ \
+aws s3 ls "s3://secrets/daily/<db>/" \
   --endpoint-url "https://<R2_ACCOUNT_ID>.r2.cloudflarestorage.com"
-```
 
-Replace `<db>` with `vaultwarden` or `infisicalDB`. Then download the file:
-
-```sh
 aws s3 cp \
   "s3://secrets/daily/<db>/<timestamp>.sql.gz.enc" \
   ./<db>.sql.gz.enc \
   --endpoint-url "https://<R2_ACCOUNT_ID>.r2.cloudflarestorage.com"
+```
+
+**From Amazon S3:**
+
+```sh
+aws s3 ls "s3://<S3_BUCKET>/daily/<db>/"
+
+aws s3 cp \
+  "s3://<S3_BUCKET>/daily/<db>/<timestamp>.sql.gz.enc" \
+  ./<db>.sql.gz.enc
 ```
 
 ## Step 2 — Decrypt and decompress

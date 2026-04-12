@@ -95,7 +95,7 @@ spec:
                 - name: scripts
                   mountPath: /scripts
           containers:
-            - name: upload
+            - name: upload-r2
               image: amazon/aws-cli:latest
               command: ["sh", "/scripts/upload-sensitive.sh"]
               env:
@@ -111,6 +111,38 @@ spec:
                     secretKeyRef:
                       name: databases-backup-secrets
                       key: SECRETS_R2_SECRET_ACCESS_KEY
+              envFrom:
+                - configMapRef:
+                    name: backup-config
+                - secretRef:
+                    name: databases-backup-secrets
+              volumeMounts:
+                - name: backup-data
+                  mountPath: /backup
+                - name: scripts
+                  mountPath: /scripts
+            - name: upload-s3
+              image: amazon/aws-cli:latest
+              command: ["sh", "/scripts/upload-s3.sh"]
+              env:
+                - name: BACKUP_PREFIX
+                  value: daily
+                - name: AWS_ACCESS_KEY_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: databases-backup-secrets
+                      key: S3_ACCESS_KEY_ID
+                - name: AWS_SECRET_ACCESS_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: databases-backup-secrets
+                      key: S3_SECRET_ACCESS_KEY
+                # Override AWS_DEFAULT_REGION: "auto" from the configmap — real S3 needs an actual region
+                - name: AWS_DEFAULT_REGION
+                  valueFrom:
+                    secretKeyRef:
+                      name: databases-backup-secrets
+                      key: S3_REGION
               envFrom:
                 - configMapRef:
                     name: backup-config
