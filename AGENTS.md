@@ -18,23 +18,31 @@ The server is only accessible over Tailscale. DNS for `wuguishifu.dev` is manage
 ## Repo Structure
 
 ```plaintext
-apps/                        # ArgoCD Application resources (App-of-Apps pattern)
-  root.yaml                  # Applied once manually — discovers all other apps/ files
-  cert-manager.yaml
-  cert-manager-config.yaml
-  postgresql.yaml            # Shared Bitnami PostgreSQL (namespace: databases)
-  redis.yaml                 # Shared Bitnami Redis (namespace: databases)
-  infisical.yaml
-  infisical-operator.yaml
-  infisical-secrets.yaml     # Deploys InfisicalSecret CRDs from manifests/infisical-secrets/
-  argocd-config.yaml
-  thermo-automation.yaml     # Daikin thermostat automation service
+apps/                        # ArgoCD Application resources (App-of-Apps pattern, recursive)
+  root.yaml                  # Applied once manually — discovers all apps/ recursively
+  certs/
+    cert-manager.yaml
+    cert-manager-config.yaml
+  infisical/
+    infisical.yaml
+    infisical-operator.yaml
+    infisical-secrets.yaml   # Deploys InfisicalSecret CRDs from manifests/infisical-secrets/
+  databases/
+    postgresql.yaml          # Shared Bitnami PostgreSQL (namespace: databases)
+    redis.yaml               # Shared Bitnami Redis (namespace: databases)
+    pgadmin.yaml
+    databases-backup.yaml
+  system/
+    argocd-config.yaml
+  homelab/
+    thermo-automation.yaml   # Daikin thermostat automation service
 
 manifests/                   # Kubernetes manifests applied by ArgoCD apps
   argocd-config/             # ArgoCD ingress + insecure mode configmap
   cert-manager-config/       # ClusterIssuer (letsencrypt-prod, Cloudflare DNS-01)
   infisical-secrets/         # InfisicalSecret CRDs — one file per secret group
   thermo-automation/         # Deployment for thermo-automation
+  databases-backup/          # Backup CronJobs and config
 ```
 
 ## Sync Wave Order
