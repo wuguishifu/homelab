@@ -1,0 +1,4 @@
+kustomize:
+  images:
+  - ghcr.io/wuguishifu/backup-manager/web@sha256:f0d7cf7a5ea06fd6dc12ca013481f8cab765c71fabc67bb5a3cd1b4767defe56
+  - ghcr.io/wuguishifu/backup-manager/k8s-adapter@sha256:41139508b8889e17bca3618b08b95b38333b0b5929ca0ade164f4afe6662c09f
