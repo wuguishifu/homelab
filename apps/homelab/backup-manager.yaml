@@ -10,7 +10,7 @@ metadata:
     argocd-image-updater.argoproj.io/image-list: "web=ghcr.io/wuguishifu/backup-manager/web:latest, k8s-adapter=ghcr.io/wuguishifu/backup-manager/k8s-adapter:latest"
     argocd-image-updater.argoproj.io/web.update-strategy: digest
     argocd-image-updater.argoproj.io/k8s-adapter.update-strategy: digest
-    argocd-image-updater.argoproj.io/write-back-method: git
+    argocd-image-updater.argoproj.io/write-back-method: git:secret:argocd/argocd-image-updater-secret
     argocd-image-updater.argoproj.io/git-branch: main
   finalizers:
     - resources-finalizer.argocd.io
