@@ -88,6 +88,8 @@ spec:
                 - configMapRef:
                     name: backup-config
                 - secretRef:
+                    name: database-credentials
+                - secretRef:
                     name: databases-backup-secrets
               volumeMounts:
                 - name: backup-data
