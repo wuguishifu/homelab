@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: topaz
-          image: ghcr.io/wuguishifu/universe/topaz:topaz-v1.0.1-8b308cf0-production
+          image: ghcr.io/wuguishifu/universe/topaz:topaz-v1.0.1-1aff04ce-production
           env:
             - name: ENVIRONMENT
               value: production
