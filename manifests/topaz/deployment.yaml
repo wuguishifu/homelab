@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: topaz
-          image: ghcr.io/wuguishifu/universe/topaz:1.0.1
+          image: ghcr.io/wuguishifu/universe/topaz:latest
           env:
             - name: ENVIRONMENT
               value: production
