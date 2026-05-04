@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: topaz
+  namespace: topaz
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: topaz
+  template:
+    metadata:
+      labels:
+        app: topaz
+    spec:
+      containers:
+        - name: topaz
+          image: ghcr.io/wuguishifu/universe/topaz:1.0.1
+          env:
+            - name: ENVIRONMENT
+              value: production
+            - name: CONFIG_PATH
+              value: /config/services.yaml
+          envFrom:
+            - secretRef:
+                name: topaz-secrets
+          ports:
+            - containerPort: 3000
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          volumeMounts:
+            - name: config
+              mountPath: /config
+      volumes:
+        - name: config
+          configMap:
+            name: topaz-config
