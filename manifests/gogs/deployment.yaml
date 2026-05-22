@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gogs
+  namespace: gogs
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gogs
+  template:
+    metadata:
+      labels:
+        app: gogs
+    spec:
+      initContainers:
+        - name: init-config
+          image: alpine:3.19
+          # Only writes app.ini on first run so Gogs can persist its own changes (e.g. INSTALL_LOCK)
+          command:
+            - /bin/sh
+            - -c
+            - |
+              if [ ! -f /data/gogs/conf/app.ini ]; then
+                apk add --no-cache gettext > /dev/null 2>&1
+                mkdir -p /data/gogs/conf
+                envsubst < /templates/app.ini.tmpl > /data/gogs/conf/app.ini
+              fi
+              chown -R 1000:1000 /data
+          env:
+            - name: GOGS_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: gogs-secrets
+                  key: GOGS_DB_PASSWORD
+            - name: GOGS_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: gogs-secrets
+                  key: GOGS_SECRET_KEY
+          volumeMounts:
+            - name: data
+              mountPath: /data
+            - name: config-template
+              mountPath: /templates
+      containers:
+        - name: gogs
+          image: gogs/gogs:latest
+          ports:
+            - containerPort: 3000
+          volumeMounts:
+            - name: data
+              mountPath: /data
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 30
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: gogs-data
+        - name: config-template
+          configMap:
+            name: gogs-config-template

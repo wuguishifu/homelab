@@ -1,0 +1,40 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gogs-config-template
+  namespace: gogs
+data:
+  app.ini.tmpl: |
+    APP_NAME = Gogs
+    RUN_MODE = prod
+
+    [repository]
+    ROOT = /data/git/repositories
+
+    [server]
+    DOMAIN      = git.wuguishifu.dev
+    HTTP_PORT   = 3000
+    ROOT_URL    = https://git.wuguishifu.dev/
+    DISABLE_SSH = true
+
+    [database]
+    DB_TYPE  = postgres
+    HOST     = postgresql.databases.svc.cluster.local:5432
+    NAME     = gogs
+    USER     = gogs
+    PASSWD   = ${GOGS_DB_PASSWORD}
+    SSL_MODE = disable
+
+    [security]
+    INSTALL_LOCK = false
+    SECRET_KEY   = ${GOGS_SECRET_KEY}
+
+    [service]
+    DISABLE_REGISTRATION = true
+    REQUIRE_SIGNIN_VIEW  = false
+    ENABLE_NOTIFY_MAIL   = false
+
+    [log]
+    MODE      = console
+    LEVEL     = Info
+    ROOT_PATH = /data/gogs/log
