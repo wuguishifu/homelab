@@ -5,36 +5,35 @@ metadata:
   namespace: gogs
 data:
   app.ini.tmpl: |
-    APP_NAME = Gogs
-    RUN_MODE = prod
+    app_name = Gogs
+    run_mode = prod
 
     [repository]
-    ROOT = /data/git/repositories
+    root = /data/git/repositories
 
     [server]
-    DOMAIN      = git.wuguishifu.dev
-    HTTP_PORT   = 3000
-    ROOT_URL    = https://git.wuguishifu.dev/
-    DISABLE_SSH = true
+    domain       = git.wuguishifu.dev
+    http_port    = 3000
+    external_url = https://git.wuguishifu.dev/
+    disable_ssh  = true
 
     [database]
-    DB_TYPE  = postgres
-    HOST     = postgresql.databases.svc.cluster.local:5432
-    NAME     = gogs
-    USER     = gogs
-    PASSWD   = ${GOGS_DB_PASSWORD}
-    SSL_MODE = disable
+    type     = postgres
+    host     = postgresql.databases.svc.cluster.local:5432
+    name     = gogs
+    user     = gogs
+    password = ${GOGS_DB_PASSWORD}
+    ssl_mode = disable
 
     [security]
-    INSTALL_LOCK = false
-    SECRET_KEY   = ${GOGS_SECRET_KEY}
+    install_lock = false
+    secret_key   = ${GOGS_SECRET_KEY}
 
-    [service]
-    DISABLE_REGISTRATION = true
-    REQUIRE_SIGNIN_VIEW  = false
-    ENABLE_NOTIFY_MAIL   = false
+    [auth]
+    disable_registration = true
+    require_signin_view  = false
 
     [log]
-    MODE      = console
-    LEVEL     = Info
-    ROOT_PATH = /data/gogs/log
+    mode      = console
+    level     = info
+    root_path = /data/gogs/log
