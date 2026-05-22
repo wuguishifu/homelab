@@ -23,3 +23,6 @@ data:
 
       - name: pgadmin
         url: https://pgadmin.wuguishifu.dev
+
+      - name: gogs
+        url: https://git.wuguishifu.dev
