@@ -47,6 +47,7 @@ data:
   dump-sensitive.sh: |
     #!/bin/sh
     set -eu
+    apk add --no-cache openssl >/dev/null 2>&1
     for db in $SENSITIVE_DATABASES; do
       echo "Dumping ${db}..."
       PGPASSWORD="$POSTGRES_ADMIN_PASSWORD" pg_dump \
