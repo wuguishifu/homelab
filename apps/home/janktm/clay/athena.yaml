@@ -3,6 +3,8 @@ kind: Application
 metadata:
   name: janktm-clay-athena
   namespace: argocd
+  labels:
+    group: janktm
   annotations:
     argocd.argoproj.io/sync-wave: "2"
     argocd-image-updater.argoproj.io/image-list: athena=ghcr.io/janktm/jam/athena:latest
