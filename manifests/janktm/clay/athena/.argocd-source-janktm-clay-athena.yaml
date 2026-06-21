@@ -1,3 +1,3 @@
 kustomize:
   images:
-  - ghcr.io/janktm/jam/athena@sha256:8c46d60cb2c6211abcc90fcd1b91749198ddb5ea8d7e8b9d6be20b61102c18ae
+  - ghcr.io/janktm/jam/athena@sha256:296d1dfc1c0e4c24a38922c6df42c47d6db00d59f7fc2efd6ebc1a0a4253b082
