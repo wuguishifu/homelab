@@ -13,7 +13,7 @@ metadata:
     argocd-image-updater.argoproj.io/write-back-method: git:secret:argocd/argocd-image-updater-secret
     argocd-image-updater.argoproj.io/git-branch: main
   finalizers:
-    - resources-finalizer.argocd.io
+    - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
   source:
