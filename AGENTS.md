@@ -1,6 +1,6 @@
 # Homelab — Agent Guide
 
-This repo is a GitOps homelab running on a single server, the apartment server (`sol`). ArgoCD runs on it and watches this repo to reconcile the cluster.
+This repo is a GitOps homelab running on a single server, `sol`. ArgoCD runs on it and watches this repo to reconcile the cluster.
 
 ## Stack
 
@@ -20,7 +20,7 @@ The server is reachable over Tailscale only — there is no public ingress. DNS 
 ```plaintext
 apps/                        # ArgoCD Application resources (App-of-Apps pattern, recursive)
   root.yaml                  # Applied once manually — discovers all apps/ recursively
-  apartment/                 # All apps (destination: kubernetes.default.svc)
+  sol/                       # All apps (destination: kubernetes.default.svc)
     certs/
       cert-manager.yaml
       cert-manager-config.yaml
@@ -83,7 +83,7 @@ The machine identity that allows the operator to authenticate with Infisical is 
 
 ## Adding a New App
 
-1. Add a Kubernetes `Application` manifest to `apps/apartment/`, using `destination.server: https://kubernetes.default.svc`
+1. Add a Kubernetes `Application` manifest to `apps/sol/`, using `destination.server: https://kubernetes.default.svc`
 2. Add manifests to `manifests/<app-name>/` if using files from this repo, or point directly at a Helm chart
 3. If the app needs secrets, add an `InfisicalSecret` to `manifests/infisical-secrets/` and the secret value to Infisical
 4. Push — ArgoCD handles the rest
