@@ -1,3 +1,0 @@
-kustomize:
-  images:
-  - ghcr.io/janktm/jam/saturn@sha256:b28286c0c7ef8be593c4dde35960a5244c9f58cef89f972fa7a655d62699a753
