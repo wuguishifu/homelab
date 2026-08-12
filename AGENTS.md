@@ -13,7 +13,7 @@ This repo is a GitOps homelab running on a single server, `sol`. ArgoCD runs on 
 | Infisical                  | Self-hosted secrets manager                                   |
 | Infisical secrets-operator | Syncs secrets from Infisical → Kubernetes `Secret` objects    |
 
-The server is reachable over Tailscale only — there is no public ingress. DNS for `wuguishifu.dev` is managed by Cloudflare with a wildcard A record pointing to the server's Tailscale IP (DNS only, not proxied).
+The server is reachable over Tailscale only — no inbound ports are open. DNS for `wuguishifu.dev` is managed by Cloudflare with a wildcard A record pointing to the server's Tailscale IP (DNS only, not proxied). The one exception is `silver.wuguishifu.dev`, which is public via a Cloudflare Tunnel: a `cloudflared` Deployment in the cluster makes an outbound connection to Cloudflare's edge, and the tunnel's proxied CNAME overrides the wildcard for that hostname. The tunnel routes straight to the silver Service (bypassing Traefik), and the hostname is protected by a Cloudflare Access service-token policy so only callers with the token (the Vercel Next.js app) get through.
 
 ## Repo Structure
 
@@ -37,12 +37,16 @@ apps/                        # ArgoCD Application resources (App-of-Apps pattern
       argocd-config.yaml
     homelab/
       thermo-automation.yaml # Daikin thermostat automation service
+      silver.yaml            # Silver API (public via Cloudflare Tunnel)
+      cloudflared.yaml       # Cloudflare Tunnel connector
 
 manifests/                   # Kubernetes manifests applied by ArgoCD apps
   argocd-config/             # ArgoCD ingress + insecure mode configmap
   cert-manager-config/       # ClusterIssuer (letsencrypt-prod, Cloudflare DNS-01)
   infisical-secrets/         # InfisicalSecret CRDs — one file per secret group
   thermo-automation/         # Deployment for thermo-automation
+  silver/                    # Deployment + Service for silver
+  cloudflared/               # Cloudflare Tunnel connector Deployment
   databases-backup/          # Backup CronJobs and config
 ```
 
@@ -56,7 +60,7 @@ Apps deploy in waves to respect dependencies:
 | 1    | cert-manager-config, postgresql, redis       |
 | 2    | argocd-config, infisical, infisical-operator |
 | 3    | infisical-secrets                            |
-| 4    | thermo-automation                            |
+| 4    | thermo-automation, silver, cloudflared       |
 
 ## Secrets Architecture
 
