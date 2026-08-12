@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: silver
+  namespace: silver
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: silver
+  template:
+    metadata:
+      labels:
+        app: silver
+    spec:
+      containers:
+        - name: silver
+          image: ghcr.io/wuguishifu/universe/silver:latest
+          env:
+            - name: ENVIRONMENT
+              value: production
+          envFrom:
+            - secretRef:
+                name: silver-secrets
+          ports:
+            - containerPort: 3001
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 3001
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 3001
+            initialDelaySeconds: 5
+            periodSeconds: 10
