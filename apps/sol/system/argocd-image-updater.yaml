@@ -20,6 +20,11 @@ spec:
         config:
           gitCommitUser: "ArgoCD Image Updater"
           gitCommitEmail: "argocd-image-updater@wuguishifu.dev"
+          registries:
+            - name: GitHub Container Registry
+              api_url: https://ghcr.io
+              prefix: ghcr.io
+              credentials: secret:argocd/ghcr-credentials#creds
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd

@@ -168,3 +168,38 @@ kubectl delete secret cloudflare-api-token -n cert-manager
 ```
 
 The operator will recreate it from Infisical within 60 seconds. From this point on, all new secrets go into Infisical — add an `InfisicalSecret` manifest to `manifests/infisical-secrets/` and ArgoCD handles the rest.
+
+---
+
+## Post-install: Private ghcr images
+
+Some images (e.g. `ghcr.io/wuguishifu/universe/*`) are private. Two things need to authenticate with ghcr, both using the same GitHub **classic** PAT with only the `read:packages` scope (fine-grained tokens do not work for ghcr registry auth). Create it at **GitHub → Settings → Developer settings → Personal access tokens (classic)**.
+
+### 1. Node pull auth (k3s)
+
+Lets the kubelet pull private images. On the server:
+
+```sh
+sudo tee /etc/rancher/k3s/registries.yaml > /dev/null <<EOF
+configs:
+  ghcr.io:
+    auth:
+      username: wuguishifu
+      password: <PAT>
+EOF
+
+sudo systemctl restart k3s
+```
+
+> `registries.yaml` is node-local config and never stored in Git. Restarting k3s does not disrupt running pods.
+
+### 2. argocd-image-updater registry auth
+
+Lets the image updater query ghcr for new digests (without this, auto-update of private images silently does nothing). In Infisical, add:
+
+- Environment: `prod`
+- Path: `/ghcr`
+- Key: `creds`
+- Value: `wuguishifu:<PAT>`
+
+The `InfisicalSecret` in `manifests/infisical-secrets/ghcr-credentials.yaml` syncs this into the `argocd` namespace, and the image updater reads it via the `registries` config in `apps/sol/system/argocd-image-updater.yaml`.
