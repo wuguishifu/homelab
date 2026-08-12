@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: garage
+  namespace: garage
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - s3.wuguishifu.dev
+      secretName: garage-s3-tls
+  rules:
+    - host: s3.wuguishifu.dev
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: garage
+                port:
+                  number: 3900
