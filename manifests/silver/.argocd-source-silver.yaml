@@ -1,0 +1,3 @@
+kustomize:
+  images:
+  - ghcr.io/wuguishifu/universe/silver@sha256:c4006f464c777de6a7e04ba2c09685ac33e79f4abe4bab9c06dde799c8c4c754
