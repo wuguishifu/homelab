@@ -14,7 +14,7 @@ spec:
         secretName: infisical-machine-identity
         secretNamespace: infisical-operator-system
       secretsScope:
-        projectSlug: homelab
+        projectSlug: universe
         envSlug: prod
         secretsPath: /silver
         recursive: false
