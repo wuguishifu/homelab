@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: redisinsight
+  namespace: databases
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - redisinsight.wuguishifu.dev
+      secretName: redisinsight-tls
+  rules:
+    - host: redisinsight.wuguishifu.dev
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: redisinsight
+                port:
+                  number: 80

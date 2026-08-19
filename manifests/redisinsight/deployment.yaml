@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redisinsight
+  namespace: databases
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redisinsight
+  template:
+    metadata:
+      labels:
+        app: redisinsight
+    spec:
+      securityContext:
+        fsGroup: 1000
+      containers:
+        - name: redisinsight
+          image: redis/redisinsight:3.8.0
+          env:
+            - name: RI_REDIS_HOST
+              value: redis-master
+            - name: RI_REDIS_PORT
+              value: "6379"
+            - name: RI_REDIS_ALIAS
+              value: redis
+            - name: RI_REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: redisinsight-secrets
+                  key: REDIS_PASS
+          ports:
+            - containerPort: 5540
+          volumeMounts:
+            - name: data
+              mountPath: /data
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: redisinsight-data
