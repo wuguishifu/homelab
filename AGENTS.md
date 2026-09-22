@@ -61,6 +61,7 @@ Apps deploy in waves to respect dependencies:
 | 2    | argocd-config, infisical, infisical-operator |
 | 3    | infisical-secrets                            |
 | 4    | thermo-automation, silver, cloudflared       |
+| 5    | garage-webui (depends on garage)             |
 
 ## Secrets Architecture
 

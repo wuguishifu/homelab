@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: garage-webui
+  namespace: garage
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - garage.wuguishifu.dev
+      secretName: garage-webui-tls
+  rules:
+    - host: garage.wuguishifu.dev
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: garage-webui
+                port:
+                  number: 80

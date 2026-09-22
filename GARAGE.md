@@ -2,7 +2,21 @@
 
 Garage is the S3-compatible object store running in the `garage` namespace. The S3 API is exposed at `https://s3.wuguishifu.dev` (Tailscale-only, like everything else behind Traefik).
 
-There is no web UI — buckets and keys are managed with the `garage` CLI via `kubectl exec`. For convenience:
+## Web UI
+
+[garage-webui](https://github.com/khairul169/garage-webui) runs in the same namespace at `https://garage.wuguishifu.dev`. It talks to the Garage admin API in-cluster (`http://garage:3903`) using `GARAGE_ADMIN_TOKEN`, and covers cluster/layout status, buckets, the object browser, and access keys.
+
+Login is a single username/password pair from `WEBUI_AUTH_USER_PASS` in the `/garage` Infisical path, in `username:bcrypt_hash` form. Generate a new one with:
+
+```sh
+htpasswd -nbBC 10 <username> <password>
+```
+
+Sessions are stored in-memory, so the Deployment stays at one replica — restarting the pod logs you out.
+
+## CLI
+
+Anything the UI does not cover is managed with the `garage` CLI via `kubectl exec`. For convenience:
 
 ```sh
 alias garage='kubectl -n garage exec -it deploy/garage -- /garage'
