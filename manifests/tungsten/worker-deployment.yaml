@@ -1,0 +1,93 @@
+# Worker: runs ffmpeg + whisper for jobs from Redis. No Service; it only makes outbound
+# connections, which is what lets it move to other hardware later.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tungsten-worker
+  namespace: tungsten
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tungsten
+      component: worker
+  template:
+    metadata:
+      labels:
+        app: tungsten
+        component: worker
+    spec:
+      # On SIGTERM the worker finishes its current job before exiting. Jobs cut off after this
+      # are picked up again by the next worker (batch) or retried by the caller (interactive).
+      terminationGracePeriodSeconds: 300
+      initContainers:
+        - name: fetch-models
+          image: curlimages/curl:8.22.0
+          command: ["/bin/sh", "/config/fetch-models.sh"]
+          securityContext:
+            # The image defaults to a non-root user, which can't write to a fresh local-path volume.
+            runAsUser: 0
+          env:
+            - name: MODELS_DIR
+              value: /models
+            - name: HF_REVISION
+              valueFrom:
+                configMapKeyRef:
+                  name: tungsten-models
+                  key: HF_REVISION
+            - name: WHISPER_MODELS
+              valueFrom:
+                configMapKeyRef:
+                  name: tungsten-env
+                  key: WHISPER_MODELS
+          volumeMounts:
+            - name: models
+              mountPath: /models
+            - name: model-config
+              mountPath: /config
+      containers:
+        - name: tungsten
+          image: ghcr.io/wuguishifu/universe/tungsten:latest
+          env:
+            - name: ENVIRONMENT
+              value: production
+            - name: TUNGSTEN_ROLE
+              value: worker
+            - name: TUNGSTEN_WORKER_LANES
+              value: interactive,batch
+          envFrom:
+            - secretRef:
+                name: tungsten-secrets
+            - configMapRef:
+                name: tungsten-env
+          ports:
+            - containerPort: 3002
+          resources:
+            requests:
+              cpu: 500m
+              memory: 512Mi
+            limits:
+              # The whole node (sol has 4 cores): whisper threads spin while waiting on each
+              # other, so a cap below the thread count (2 + 2 in configmap.yaml) throttles them
+              # badly. Other pods keep their share under contention through their CPU requests.
+              cpu: "4"
+              memory: 2Gi
+          # Only liveness: the worker takes no traffic, so readiness would mean nothing.
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 3002
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            timeoutSeconds: 5
+          volumeMounts:
+            - name: models
+              mountPath: /models
+              readOnly: true
+      volumes:
+        - name: models
+          persistentVolumeClaim:
+            claimName: tungsten-models
+        - name: model-config
+          configMap:
+            name: tungsten-models

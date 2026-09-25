@@ -1,0 +1,67 @@
+# Non-secret settings shared by the api and worker. Secrets (token, Redis URL, S3) come from
+# Infisical via tungsten-secrets.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tungsten-env
+  namespace: tungsten
+data:
+  # Models callers may request. Every entry must also be in models.txt below, or the
+  # worker's fetch-models init container fails (so a typo can't ship a broken allow-list).
+  # The first entry is the default model.
+  WHISPER_MODELS: "base.en,small.en"
+  # Threads per lane on the worker. sol is a 4-core Intel N100 whose other pods use ~0.3 cores
+  # (Sep 2026). Batch is kept at 1 until something relies on it. Keep the sum at or below the
+  # worker's CPU limit (worker-deployment.yaml).
+  WHISPER_THREADS_INTERACTIVE: "2"
+  WHISPER_THREADS_BATCH: "1"
+---
+# The models the worker keeps on its PVC, pinned to a Hugging Face commit and verified by
+# SHA-256. Adding a line downloads that model on the next worker start; removing one deletes it.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tungsten-models
+  namespace: tungsten
+data:
+  HF_REVISION: "5359861c739e955e79d9a303bcbc70fb988958b1"
+  models.txt: |
+    # name            sha256                                                            size
+    base.en           a03779c86df3323075f5e796cb2ce5029f00ec8869eee3fdfb897afe36c6d002  148MB
+    small.en          c6138d6d58ecc8322097e0f987c32f1be8bb0a18532a3f88f734d1bbf9c41e5d  488MB
+    # large-v3-turbo  1fc70f774d38eb169993ac391eea357ef47c88757ef72ee5943879b7e8e2bc69  1.6GB
+    # (large-v3-turbo needs the worker's memory limit raised to ~4Gi, and is slow on the N100's CPU.)
+  fetch-models.sh: |
+    #!/bin/sh
+    # Makes /models match models.txt: downloads missing or corrupt models, deletes unlisted ones.
+    set -eu
+    base="https://huggingface.co/ggerganov/whisper.cpp/resolve/$HF_REVISION"
+    listed=""
+
+    while read -r name sha _; do
+      case "$name" in '' | '#'*) continue ;; esac
+      listed="$listed $name "
+      file="$MODELS_DIR/ggml-$name.bin"
+      if [ -f "$file" ] && echo "$sha  $file" | sha256sum -c -s -; then
+        echo "$name: present"
+        continue
+      fi
+      echo "$name: downloading"
+      curl -fSL --retry 5 --retry-delay 5 -o "$file.part" "$base/ggml-$name.bin"
+      echo "$sha  $file.part" | sha256sum -c -
+      mv "$file.part" "$file"
+    done < /config/models.txt
+
+    for file in "$MODELS_DIR"/ggml-*.bin "$MODELS_DIR"/*.part; do
+      [ -e "$file" ] || continue
+      name="${file##*/ggml-}"
+      name="${name%.bin}"
+      case "$listed" in *" $name "*) ;; *) echo "removing $file"; rm -f "$file" ;; esac
+    done
+
+    for model in $(echo "$WHISPER_MODELS" | tr ',' ' '); do
+      case "$listed" in
+        *" $model "*) ;;
+        *) echo "WHISPER_MODELS lists $model, but models.txt doesn't" >&2; exit 1 ;;
+      esac
+    done
