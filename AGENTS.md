@@ -49,7 +49,7 @@ manifests/                   # Kubernetes manifests applied by ArgoCD apps
   thermo-automation/         # Deployment for thermo-automation
   silver/                    # Deployment + Service for silver
   ruby/                      # Deployment for the ruby Discord bot
-  tungsten/                  # Selector-less Service + EndpointSlice for tungsten (runs on the mini)
+  tungsten/                  # nginx proxy + Service giving pods an address for tungsten (runs on the mini)
   cloudflared/               # Cloudflare Tunnel connector Deployment
   databases-backup/          # Backup CronJobs and config
 

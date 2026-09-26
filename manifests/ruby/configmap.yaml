@@ -10,3 +10,6 @@ data:
   TUNGSTEN_URL: "http://tungsten.tungsten.svc.cluster.local"
   # Empty: register slash commands globally rather than to dev servers.
   DISCORD_DEV_GUILD_IDS: ""
+  # Logs every captured clip and transcript. Useful while bringing ruby up; set to "false" once
+  # it's settled.
+  DEBUG_LOGGING: "true"

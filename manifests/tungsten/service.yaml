@@ -1,16 +1,17 @@
 # In-cluster address for tungsten, which runs natively on the Mac mini (hosts/mini), not in k3s.
-# Pods call http://tungsten.tungsten.svc.cluster.local as if it were an ordinary Service; when
-# tungsten moves (another host, or back into the cluster), only the EndpointSlice changes.
-#
-# No selector: the endpoints are listed by hand in endpointslice.yaml.
+# Pods call http://tungsten.tungsten.svc.cluster.local; the tungsten-proxy Deployment forwards
+# to the mini. When tungsten moves (another host, or back into the cluster), only the proxy's
+# target in configmap.yaml changes.
 apiVersion: v1
 kind: Service
 metadata:
   name: tungsten
   namespace: tungsten
 spec:
+  selector:
+    app: tungsten-proxy
   ports:
     - name: http
       port: 80
-      targetPort: 3002
+      targetPort: 8080
       protocol: TCP

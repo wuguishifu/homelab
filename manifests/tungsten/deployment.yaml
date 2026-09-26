@@ -1,0 +1,52 @@
+# nginx forwarding to tungsten on the Mac mini (see configmap.yaml). A plain proxy rather than a
+# selector-less Service + EndpointSlice because Argo CD excludes Endpoints/EndpointSlices by
+# default, so it never applies them.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tungsten-proxy
+  namespace: tungsten
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tungsten-proxy
+  template:
+    metadata:
+      labels:
+        app: tungsten-proxy
+      annotations:
+        # Changing only the ConfigMap wouldn't restart nginx; bump this to force a rollout.
+        config-version: "1"
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.30-alpine
+          ports:
+            - containerPort: 8080
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+            limits:
+              memory: 64Mi
+          livenessProbe:
+            httpGet:
+              path: /proxy-health
+              port: 8080
+            periodSeconds: 30
+          # Ready only while the mini answers, so when it's down the Service has no endpoints
+          # and callers fail fast instead of waiting on timeouts.
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 8080
+            periodSeconds: 10
+            timeoutSeconds: 5
+          volumeMounts:
+            - name: config
+              mountPath: /etc/nginx/conf.d
+      volumes:
+        - name: config
+          configMap:
+            name: tungsten-proxy
