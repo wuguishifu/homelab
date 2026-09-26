@@ -38,6 +38,8 @@ apps/                        # ArgoCD Application resources (App-of-Apps pattern
     homelab/
       thermo-automation.yaml # Daikin thermostat automation service
       silver.yaml            # Silver API (public via Cloudflare Tunnel)
+      ruby.yaml              # Ruby Discord bot
+      tungsten.yaml          # In-cluster Service pointing at tungsten on the Mac mini
       cloudflared.yaml       # Cloudflare Tunnel connector
 
 manifests/                   # Kubernetes manifests applied by ArgoCD apps
@@ -46,6 +48,8 @@ manifests/                   # Kubernetes manifests applied by ArgoCD apps
   infisical-secrets/         # InfisicalSecret CRDs — one file per secret group
   thermo-automation/         # Deployment for thermo-automation
   silver/                    # Deployment + Service for silver
+  ruby/                      # Deployment for the ruby Discord bot
+  tungsten/                  # Selector-less Service + EndpointSlice for tungsten (runs on the mini)
   cloudflared/               # Cloudflare Tunnel connector Deployment
   databases-backup/          # Backup CronJobs and config
 
@@ -61,14 +65,14 @@ applies it, the same GitOps model as ArgoCD. See `hosts/mini/README.md`.
 
 Apps deploy in waves to respect dependencies:
 
-| Wave | Apps                                         |
-| ---- | -------------------------------------------- |
-| 0    | cert-manager                                 |
-| 1    | cert-manager-config, postgresql, redis       |
-| 2    | argocd-config, infisical, infisical-operator |
-| 3    | infisical-secrets                            |
-| 4    | thermo-automation, silver, cloudflared       |
-| 5    | garage-webui (depends on garage)             |
+| Wave | Apps                                                   |
+| ---- | ------------------------------------------------------ |
+| 0    | cert-manager                                           |
+| 1    | cert-manager-config, postgresql, redis                 |
+| 2    | argocd-config, infisical, infisical-operator           |
+| 3    | infisical-secrets                                      |
+| 4    | thermo-automation, silver, ruby, tungsten, cloudflared |
+| 5    | garage-webui (depends on garage)                       |
 
 ## Secrets Architecture
 

@@ -1,0 +1,56 @@
+# Discord bot. Not a web service: it holds a gateway connection and voice connections, so it
+# takes no traffic and has no Service; the HTTP server is only for health probes.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ruby
+  namespace: ruby
+spec:
+  # Exactly one: two instances would both answer every command and fight over voice
+  # connections. Recreate (not RollingUpdate) so old and new never overlap during a deploy.
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: ruby
+  template:
+    metadata:
+      labels:
+        app: ruby
+    spec:
+      # On SIGTERM ruby leaves voice channels and lets in-flight utterance jobs (a few seconds
+      # each) finish; unfinished ones are retried from Redis by the next pod.
+      terminationGracePeriodSeconds: 60
+      containers:
+        - name: ruby
+          image: ghcr.io/wuguishifu/universe/ruby:latest
+          env:
+            - name: ENVIRONMENT
+              value: production
+          envFrom:
+            - secretRef:
+                name: ruby-secrets
+            - configMapRef:
+                name: ruby-env
+          ports:
+            - containerPort: 3003
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              # Opus decoding is light; transcription happens in tungsten.
+              memory: 512Mi
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 3003
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 3003
+            initialDelaySeconds: 5
+            periodSeconds: 10

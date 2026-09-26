@@ -1,0 +1,36 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: ruby
+  namespace: argocd
+  labels:
+    group: homelab
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+    argocd-image-updater.argoproj.io/image-list: "ruby=ghcr.io/wuguishifu/universe/ruby:latest"
+    argocd-image-updater.argoproj.io/ruby.update-strategy: digest
+    argocd-image-updater.argoproj.io/write-back-method: git:secret:argocd/argocd-image-updater-secret
+    argocd-image-updater.argoproj.io/git-branch: main
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/wuguishifu/homelab.git
+    targetRevision: HEAD
+    path: manifests/ruby
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: ruby
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 5m

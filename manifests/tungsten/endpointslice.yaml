@@ -1,0 +1,23 @@
+# Where the tungsten Service sends traffic: the Mac mini's Tailscale IP (bos-mac-mini). Pods
+# reach tailnet IPs through sol's Tailscale interface, but can't resolve MagicDNS names, so this
+# has to be an IP. It only changes if the mini is removed from and re-added to the tailnet
+# (check with `tailscale ip -4 bos-mac-mini`).
+apiVersion: discovery.k8s.io/v1
+kind: EndpointSlice
+metadata:
+  name: tungsten-mini
+  namespace: tungsten
+  labels:
+    kubernetes.io/service-name: tungsten
+    # Anything but the EndpointSlice controller's own name, so Kubernetes leaves it alone.
+    endpointslice.kubernetes.io/managed-by: homelab
+addressType: IPv4
+ports:
+  - name: http
+    port: 3002
+    protocol: TCP
+endpoints:
+  - addresses:
+      - 100.81.149.1
+    conditions:
+      ready: true

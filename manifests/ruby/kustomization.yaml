@@ -1,0 +1,6 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+# Image Updater writes its digest override to .argocd-source-ruby.yaml alongside this.
+resources:
+  - configmap.yaml
+  - deployment.yaml
