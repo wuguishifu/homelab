@@ -48,7 +48,14 @@ manifests/                   # Kubernetes manifests applied by ArgoCD apps
   silver/                    # Deployment + Service for silver
   cloudflared/               # Cloudflare Tunnel connector Deployment
   databases-backup/          # Backup CronJobs and config
+
+hosts/                       # Machines outside Kubernetes, managed with their own pull-based reconciler
+  mini/                      # Apple M4 Mac mini: services run natively under launchd (see its README)
 ```
+
+Not everything runs in k3s: `hosts/mini/` describes services that run natively on the Mac mini
+(e.g. tungsten, which needs Apple Silicon's GPU). The mini pulls this repo every minute and
+applies it, the same GitOps model as ArgoCD. See `hosts/mini/README.md`.
 
 ## Sync Wave Order
 

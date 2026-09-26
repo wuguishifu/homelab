@@ -1,0 +1,4 @@
+# System dependencies for tungsten, installed by reconcile.sh with `brew bundle`.
+brew "ffmpeg"
+brew "whisper-cpp" # Metal-accelerated whisper-cli
+brew "redis", restart_service: :changed # local queue backend; binds to localhost

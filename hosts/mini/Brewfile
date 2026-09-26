@@ -1,0 +1,4 @@
+# Host-wide dependencies for the Mac mini (setup.sh). Each service adds its own in services/<name>/Brewfile.
+tap "infisical/get-cli"
+brew "node@22" # matches the node:22 images the releases are built in
+brew "infisical"

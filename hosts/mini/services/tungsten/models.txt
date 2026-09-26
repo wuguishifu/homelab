@@ -1,0 +1,6 @@
+# Whisper models kept in $SERVICE_DATA/models, pinned to HF_REVISION (service.env) and verified
+# by SHA-256. Adding a line downloads it on the next start; removing one deletes it.
+# name                 sha256                                                            size
+small.en-q8_0          67a179f608ea6114bd3fdb9060e762b588a3fb3bd00c4387971be4d177958067  264MB
+base.en-q8_0           a4d4a0768075e13cfd7e19df3ae2dbc4a68d37d36a7dad45e8410c9a34f8c87e  82MB
+large-v3-turbo-q8_0    317eb69c11673c9de1e1f0d459b253999804ec71ac4c23c17ecf5fbe24e259a1  874MB
