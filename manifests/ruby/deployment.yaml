@@ -1,5 +1,5 @@
-# Discord bot. Not a web service: it holds a gateway connection and voice connections, so it
-# takes no traffic and has no Service; the HTTP server is only for health probes.
+# Discord bot. It holds a gateway connection and voice connections; its HTTP server serves
+# health probes and the live transcript feed socket (see service.yaml).
 apiVersion: apps/v1
 kind: Deployment
 metadata:

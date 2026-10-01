@@ -13,7 +13,7 @@ This repo is a GitOps homelab running on a single server, `sol`. ArgoCD runs on 
 | Infisical                  | Self-hosted secrets manager                                   |
 | Infisical secrets-operator | Syncs secrets from Infisical → Kubernetes `Secret` objects    |
 
-The server is reachable over Tailscale only — no inbound ports are open. DNS for `wuguishifu.dev` is managed by Cloudflare with a wildcard A record pointing to the server's Tailscale IP (DNS only, not proxied). The one exception is `silver.wuguishifu.dev`, which is public via a Cloudflare Tunnel: a `cloudflared` Deployment in the cluster makes an outbound connection to Cloudflare's edge, and the tunnel's proxied CNAME overrides the wildcard for that hostname. The tunnel routes straight to the silver Service (bypassing Traefik), and the hostname is protected by a Cloudflare Access service-token policy so only callers with the token (the Vercel Next.js app) get through.
+The server is reachable over Tailscale only — no inbound ports are open. DNS for `wuguishifu.dev` is managed by Cloudflare with a wildcard A record pointing to the server's Tailscale IP (DNS only, not proxied). The exceptions are `silver.wuguishifu.dev` and `ruby.wuguishifu.dev`, which are public via a Cloudflare Tunnel: a `cloudflared` Deployment in the cluster makes an outbound connection to Cloudflare's edge, and the tunnel's proxied CNAMEs override the wildcard for those hostnames. The tunnel routes straight to each app's Service (bypassing Traefik). Silver is protected by a Cloudflare Access service-token policy so only callers with the token (the Vercel Next.js app) get through. Ruby has no Access app because browsers connect to its live feed WebSocket directly; that socket requires a ticket signed by sapphire instead (see `manifests/ruby/README.md`).
 
 ## Repo Structure
 
@@ -38,7 +38,7 @@ apps/                        # ArgoCD Application resources (App-of-Apps pattern
     homelab/
       thermo-automation.yaml # Daikin thermostat automation service
       silver.yaml            # Silver API (public via Cloudflare Tunnel)
-      ruby.yaml              # Ruby Discord bot
+      ruby.yaml              # Ruby Discord bot (live feed public via Cloudflare Tunnel)
       tungsten.yaml          # In-cluster Service pointing at tungsten on the Mac mini
       cloudflared.yaml       # Cloudflare Tunnel connector
 
@@ -48,7 +48,7 @@ manifests/                   # Kubernetes manifests applied by ArgoCD apps
   infisical-secrets/         # InfisicalSecret CRDs — one file per secret group
   thermo-automation/         # Deployment for thermo-automation
   silver/                    # Deployment + Service for silver
-  ruby/                      # Deployment for the ruby Discord bot
+  ruby/                      # Deployment + Service for the ruby Discord bot
   tungsten/                  # nginx proxy + Service giving pods an address for tungsten (runs on the mini)
   cloudflared/               # Cloudflare Tunnel connector Deployment
   databases-backup/          # Backup CronJobs and config

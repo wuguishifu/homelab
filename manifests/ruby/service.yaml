@@ -1,0 +1,14 @@
+# Gives the Cloudflare Tunnel a stable address for ruby's live feed socket
+# (ruby.wuguishifu.dev → http://ruby.ruby.svc.cluster.local). Pod names change on every rollout;
+# this name doesn't.
+apiVersion: v1
+kind: Service
+metadata:
+  name: ruby
+  namespace: ruby
+spec:
+  selector:
+    app: ruby
+  ports:
+    - port: 80
+      targetPort: 3003

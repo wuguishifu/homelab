@@ -1,5 +1,5 @@
-# Non-secret settings. Secrets (Discord token, Redis, Convex, tungsten token) come from
-# Infisical via ruby-secrets; see README.md.
+# Non-secret settings. Secrets (Discord token, Redis, Convex, tungsten token, feed secret) come
+# from Infisical via ruby-secrets; see README.md.
 apiVersion: v1
 kind: ConfigMap
 metadata:
