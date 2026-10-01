@@ -9,9 +9,8 @@ One replica, `Recreate` rollouts. See the comments in `deployment.yaml` for why.
 
 ## Live feed (public via Cloudflare Tunnel)
 
-`ruby.wuguishifu.dev` goes through the same tunnel as silver, straight to the `ruby` Service
-(`service.yaml`), bypassing Traefik. Unlike silver it has **no Cloudflare Access app**: the
-browser connects to `/api/feed` directly and can't send a service token. Instead the socket
+`ruby.wuguishifu.dev` goes through the Cloudflare Tunnel straight to the `ruby` Service
+(`service.yaml`), bypassing Traefik. It has **no Cloudflare Access app**: the browser connects to `/api/feed` directly and can't send a service token. Instead the socket
 requires a short-lived ticket signed by sapphire with `RUBY_FEED_SECRET`, and only shows servers
 the signed-in Discord user is a member of. `/api/health` and `/api/version` are public too.
 
