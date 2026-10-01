@@ -1,3 +1,3 @@
 kustomize:
   images:
-  - ghcr.io/wuguishifu/universe/ruby@sha256:955c2303fb129c54bcf4f71d86b430214a8da4dd0a5e9e89df1266c0e06c7240
+  - ghcr.io/wuguishifu/universe/ruby@sha256:702ec4e07ece95e0b923e19699ff3c0b2c411d354e3d4833b7d49ab426b0fe77
