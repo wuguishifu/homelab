@@ -13,7 +13,7 @@ This repo is a GitOps homelab running on a single server, `sol`. ArgoCD runs on 
 | Infisical                  | Self-hosted secrets manager                                   |
 | Infisical secrets-operator | Syncs secrets from Infisical → Kubernetes `Secret` objects    |
 
-The server is reachable over Tailscale only — no inbound ports are open. DNS for `wuguishifu.dev` is managed by Cloudflare with a wildcard A record pointing to the server's Tailscale IP (DNS only, not proxied). The exception is `ruby.wuguishifu.dev`, which is public via a Cloudflare Tunnel: a `cloudflared` Deployment in the cluster makes an outbound connection to Cloudflare's edge, and the tunnel's proxied CNAME overrides the wildcard for that hostname. The tunnel routes straight to ruby's Service (bypassing Traefik). Ruby has no Access app because browsers connect to its live feed WebSocket directly; that socket requires a ticket signed by sapphire instead (see `manifests/ruby/README.md`).
+The server is reachable over Tailscale only — no inbound ports are open. DNS for `wuguishifu.dev` is managed by Cloudflare with a wildcard A record pointing to the server's Tailscale IP (DNS only, not proxied). Nothing is currently public. A `cloudflared` Deployment in the cluster runs a Cloudflare Tunnel (an outbound connection to Cloudflare's edge) for exposing an app publicly: a tunnel public hostname gets a proxied CNAME that overrides the wildcard, and routes straight to the app's Service (bypassing Traefik). The tunnel is token-managed, so its routes live in the Cloudflare dashboard, not this repo.
 
 ## Repo Structure
 
@@ -37,7 +37,7 @@ apps/                        # ArgoCD Application resources (App-of-Apps pattern
       argocd-config.yaml
     homelab/
       thermo-automation.yaml # Daikin thermostat automation service
-      ruby.yaml              # Ruby Discord bot (live feed public via Cloudflare Tunnel)
+      ruby.yaml              # Ruby Discord bot
       tungsten.yaml          # In-cluster Service pointing at tungsten on the Mac mini
       cloudflared.yaml       # Cloudflare Tunnel connector
 
@@ -46,7 +46,7 @@ manifests/                   # Kubernetes manifests applied by ArgoCD apps
   cert-manager-config/       # ClusterIssuer (letsencrypt-prod, Cloudflare DNS-01)
   infisical-secrets/         # InfisicalSecret CRDs — one file per secret group
   thermo-automation/         # Deployment for thermo-automation
-  ruby/                      # Deployment + Service for the ruby Discord bot
+  ruby/                      # Deployment for the ruby Discord bot
   tungsten/                  # nginx proxy + Service giving pods an address for tungsten (runs on the mini)
   cloudflared/               # Cloudflare Tunnel connector Deployment
   databases-backup/          # Backup CronJobs and config
