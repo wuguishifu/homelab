@@ -23,6 +23,12 @@ spec:
             repository: infisical/infisical
             tag: "v0.158.0"
             pullPolicy: IfNotPresent
+          # Chart default is a 1000Mi limit; steady-state usage sits around 850Mi.
+          resources:
+            requests:
+              cpu: 350m
+            limits:
+              memory: 1500Mi
           # References the manually-created bootstrap secret (never stored in Git).
           # This secret is mounted as env vars — must contain ENCRYPTION_KEY, AUTH_SECRET,
           # DB_CONNECTION_URI, REDIS_URL, and SITE_URL.

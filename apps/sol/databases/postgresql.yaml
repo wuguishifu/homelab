@@ -26,6 +26,15 @@ spec:
             adminPasswordKey: POSTGRES_ADMIN_PASSWORD
             userPasswordKey: POSTGRES_PASSWORD
         primary:
+          # Override the chart's default "nano" preset (150m CPU limit), which throttled
+          # this hard enough to make Infisical's dashboard take seconds per request.
+          # No CPU limit: let it burst on the idle node.
+          resources:
+            requests:
+              cpu: 250m
+              memory: 256Mi
+            limits:
+              memory: 1Gi
           persistence:
             enabled: true
             size: 8Gi
