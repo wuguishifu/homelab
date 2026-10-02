@@ -1,36 +1,37 @@
 # Ruby
 
-Discord bot from the [universe](https://github.com/wuguishifu/universe) monorepo (`apps/ruby`)
+Discord bot from the [universe](https://github.com/wuguishifu/universe) monorepo (`projects/jankbot/ruby`)
 that tracks how often people say chosen phrases in voice channels. It records voice clips,
-sends them to [tungsten](../tungsten) for transcription, and stores counts in Convex (hydrogen).
+sends them to [transcription-service](../transcription-service) for transcription, and stores
+counts in Convex (`convex-app`).
 
 One replica, `Recreate` rollouts. See the comments in `deployment.yaml` for why.
 
 Ruby has no inbound traffic: it only makes outbound connections (Discord, Redis, Convex,
-tungsten). Its HTTP server on port 3003 exists for the kubelet's health probes, so there's no
+transcription-service). Its HTTP server on port 3003 exists for the kubelet's health probes, so there's no
 Service, Ingress, or tunnel route.
 
 ## Secrets
 
-Add these to Infisical under the `universe` project, `prod` environment, path `/ruby`:
+Add these to Infisical under the `universe` project, `prod` environment, path `/projects/jankbot/ruby`:
 
-| Key                  | Description                                                                         |
-| -------------------- | ----------------------------------------------------------------------------------- |
-| `DISCORD_TOKEN`      | Bot token from the Discord developer portal                                         |
-| `REDIS_URL`          | `redis://:<password>@redis-master.databases.svc.cluster.local:6379` (its job queue) |
-| `CONVEX_URL`         | hydrogen's **prod** deployment URL                                                  |
-| `RUBY_CONVEX_SECRET` | Random string (`openssl rand -hex 32`); must match the hydrogen prod env var        |
-| `TUNGSTEN_API_TOKEN` | Same value as `TUNGSTEN_API_TOKEN` in `/tungsten`                                   |
+| Key                               | Description                                                                         |
+| --------------------------------- | ----------------------------------------------------------------------------------- |
+| `DISCORD_TOKEN`                   | Bot token from the Discord developer portal                                         |
+| `REDIS_URL`                       | `redis://:<password>@redis-master.databases.svc.cluster.local:6379` (its job queue) |
+| `CONVEX_URL`                      | `convex-app`'s **prod** deployment URL                                              |
+| `RUBY_CONVEX_SECRET`              | Random string (`openssl rand -hex 32`); must match the `convex-app` prod env var    |
+| `TRANSCRIPTION_SERVICE_API_TOKEN` | Same value as `API_TOKEN` in `/platform/transcription/service`                      |
 
-`TUNGSTEN_URL` and `DISCORD_DEV_GUILD_IDS` are set in `configmap.yaml`, which wins over Infisical.
+`TRANSCRIPTION_SERVICE_URL` and `DISCORD_DEV_GUILD_IDS` are set in `configmap.yaml`, which wins over Infisical.
 
 ## Before the first deploy
 
-- [ ] universe `feat-ruby` is merged, and hydrogen is deployed to prod (it has ruby's tables and
+- [ ] `convex-app` (universe `platform/convex/app`) is deployed to prod (it has ruby's tables and
       functions).
-- [ ] `RUBY_CONVEX_SECRET` is set on hydrogen's prod deployment:
-      `pnpm nx convex hydrogen -- env set RUBY_CONVEX_SECRET <value> --prod`.
-- [ ] The ruby image has been built (**Deploy Server App** workflow, app `ruby`).
+- [ ] `RUBY_CONVEX_SECRET` is set on `convex-app`'s prod deployment:
+      `pnpm nx convex convex-app -- env set RUBY_CONVEX_SECRET <value> --prod`.
+- [ ] The ruby image has been built (**Deploy Server App** workflow, app `jankbot/ruby`).
 - [ ] Prod secrets above exist in Infisical.
 - [ ] Nothing else is running with the same bot token (e.g. a local `nx serve ruby`).
 

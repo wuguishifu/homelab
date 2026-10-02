@@ -16,7 +16,7 @@ spec:
       secretsScope:
         projectSlug: universe
         envSlug: prod
-        secretsPath: /ruby
+        secretsPath: /projects/jankbot/ruby
         recursive: false
 
   managedSecretReference:

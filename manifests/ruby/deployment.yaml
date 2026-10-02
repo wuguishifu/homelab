@@ -40,7 +40,7 @@ spec:
               cpu: 50m
               memory: 128Mi
             limits:
-              # Opus decoding is light; transcription happens in tungsten.
+              # Opus decoding is light; transcription happens in transcription-service.
               memory: 512Mi
           livenessProbe:
             httpGet:

@@ -1,13 +1,14 @@
-# Non-secret settings. Secrets (Discord token, Redis, Convex, tungsten token) come
-# from Infisical via ruby-secrets; see README.md.
+# Non-secret settings. Secrets (Discord token, Redis, Convex, transcription-service token)
+# come from Infisical via ruby-secrets; see README.md.
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: ruby-env
   namespace: ruby
 data:
-  # The in-cluster interface to tungsten on the Mac mini (manifests/tungsten).
-  TUNGSTEN_URL: "http://tungsten.tungsten.svc.cluster.local"
+  # The in-cluster interface to transcription-service on the Mac mini
+  # (manifests/transcription-service).
+  TRANSCRIPTION_SERVICE_URL: "http://transcription-service.transcription-service.svc.cluster.local"
   # Empty: register slash commands globally rather than to dev servers.
   DISCORD_DEV_GUILD_IDS: ""
   # Logs every captured clip and transcript. Useful while bringing ruby up; set to "false" once

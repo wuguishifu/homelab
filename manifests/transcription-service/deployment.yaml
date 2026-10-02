@@ -1,20 +1,20 @@
-# nginx forwarding to tungsten on the Mac mini (see configmap.yaml). A plain proxy rather than a
-# selector-less Service + EndpointSlice because Argo CD excludes Endpoints/EndpointSlices by
-# default, so it never applies them.
+# nginx forwarding to transcription-service on the Mac mini (see configmap.yaml). A plain proxy
+# rather than a selector-less Service + EndpointSlice because Argo CD excludes
+# Endpoints/EndpointSlices by default, so it never applies them.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: tungsten-proxy
-  namespace: tungsten
+  name: transcription-service-proxy
+  namespace: transcription-service
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: tungsten-proxy
+      app: transcription-service-proxy
   template:
     metadata:
       labels:
-        app: tungsten-proxy
+        app: transcription-service-proxy
       annotations:
         # Changing only the ConfigMap wouldn't restart nginx; bump this to force a rollout.
         config-version: "1"
@@ -49,4 +49,4 @@ spec:
       volumes:
         - name: config
           configMap:
-            name: tungsten-proxy
+            name: transcription-service-proxy

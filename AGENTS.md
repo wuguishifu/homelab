@@ -38,7 +38,7 @@ apps/                        # ArgoCD Application resources (App-of-Apps pattern
     homelab/
       thermo-automation.yaml # Daikin thermostat automation service
       ruby.yaml              # Ruby Discord bot
-      tungsten.yaml          # In-cluster Service pointing at tungsten on the Mac mini
+      transcription-service.yaml # In-cluster Service pointing at transcription-service on the Mac mini
       cloudflared.yaml       # Cloudflare Tunnel connector
 
 manifests/                   # Kubernetes manifests applied by ArgoCD apps
@@ -47,7 +47,7 @@ manifests/                   # Kubernetes manifests applied by ArgoCD apps
   infisical-secrets/         # InfisicalSecret CRDs — one file per secret group
   thermo-automation/         # Deployment for thermo-automation
   ruby/                      # Deployment for the ruby Discord bot
-  tungsten/                  # nginx proxy + Service giving pods an address for tungsten (runs on the mini)
+  transcription-service/     # nginx proxy + Service giving pods an address for transcription-service (runs on the mini)
   cloudflared/               # Cloudflare Tunnel connector Deployment
   databases-backup/          # Backup CronJobs and config
 
@@ -56,21 +56,21 @@ hosts/                       # Machines outside Kubernetes, managed with their o
 ```
 
 Not everything runs in k3s: `hosts/mini/` describes services that run natively on the Mac mini
-(e.g. tungsten, which needs Apple Silicon's GPU). The mini pulls this repo every minute and
-applies it, the same GitOps model as ArgoCD. See `hosts/mini/README.md`.
+(e.g. transcription-service, which needs Apple Silicon's GPU). The mini pulls this repo every
+minute and applies it, the same GitOps model as ArgoCD. See `hosts/mini/README.md`.
 
 ## Sync Wave Order
 
 Apps deploy in waves to respect dependencies:
 
-| Wave | Apps                                           |
-| ---- | ---------------------------------------------- |
-| 0    | cert-manager                                   |
-| 1    | cert-manager-config, postgresql, redis         |
-| 2    | argocd-config, infisical, infisical-operator   |
-| 3    | infisical-secrets                              |
-| 4    | thermo-automation, ruby, tungsten, cloudflared |
-| 5    | garage-webui (depends on garage)               |
+| Wave | Apps                                                        |
+| ---- | ----------------------------------------------------------- |
+| 0    | cert-manager                                                |
+| 1    | cert-manager-config, postgresql, redis                      |
+| 2    | argocd-config, infisical, infisical-operator                |
+| 3    | infisical-secrets                                           |
+| 4    | thermo-automation, ruby, transcription-service, cloudflared |
+| 5    | garage-webui (depends on garage)                            |
 
 ## Secrets Architecture
 

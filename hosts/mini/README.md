@@ -36,13 +36,13 @@ Everything lives in `~/.homelab/` on the mini: `repo/` (this repo), `services/<n
 
 ## A service directory
 
-| File           | Purpose                                                                      |
-| -------------- | ---------------------------------------------------------------------------- |
-| `release`      | Release tag to run, e.g. `tungsten-v1.0.1`. Change it to deploy or roll back |
-| `config.env`   | Non-secret app settings. Can use `$SERVICE_DATA` (the service's data dir)    |
-| `service.env`  | Host-side settings: Infisical location, `EXIT_TIMEOUT`, hook settings        |
-| `Brewfile`     | System dependencies (`brew bundle`)                                          |
-| `pre-start.sh` | Optional; runs before every start (tungsten syncs its models here)           |
+| File           | Purpose                                                                                   |
+| -------------- | ----------------------------------------------------------------------------------------- |
+| `release`      | Release tag to run, e.g. `transcription-service-v0.1.0`. Change it to deploy or roll back |
+| `config.env`   | Non-secret app settings. Can use `$SERVICE_DATA` (the service's data dir)                 |
+| `service.env`  | Host-side settings: Infisical location, `EXIT_TIMEOUT`, hook settings                     |
+| `Brewfile`     | System dependencies (`brew bundle`)                                                       |
+| `pre-start.sh` | Optional; runs before every start (transcription-service syncs its models here)           |
 
 ## Deploying
 
@@ -58,7 +58,7 @@ Everything lives in `~/.homelab/` on the mini: `repo/` (this repo), `services/<n
 
    ```sh
    # Infisical machine identity (Universal Auth) with read access to each service's secrets,
-   # e.g. project `universe`, env `prod`, path `/tungsten`.
+   # e.g. project `universe`, env `prod`, path `/platform/transcription/service`.
    INFISICAL_CLIENT_ID=...
    INFISICAL_CLIENT_SECRET=...
    # Fine-grained GitHub token: repository wuguishifu/universe only, Contents: read-only.
@@ -90,6 +90,6 @@ bash ~/.homelab/repo/hosts/mini/reconcile.sh           # reconcile now instead o
 
 ## Services
 
-- **tungsten**: speech-to-text API (whisper.cpp on Metal) at `http://bos-mac-mini:3002` over
-  Tailscale, with a local Redis for its queues. Callers need `TUNGSTEN_API_TOKEN`. It listens on
+- **transcription-service**: speech-to-text API (whisper.cpp on Metal) at `http://bos-mac-mini:3002`
+  over Tailscale, with a local Redis for its queues. Callers need its `API_TOKEN`. It listens on
   all interfaces, so the token check is what protects it on the LAN.

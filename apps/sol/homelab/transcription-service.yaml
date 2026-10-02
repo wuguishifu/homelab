@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: tungsten
+  name: transcription-service
   namespace: argocd
   labels:
     group: homelab
@@ -14,10 +14,10 @@ spec:
   source:
     repoURL: https://github.com/wuguishifu/homelab.git
     targetRevision: HEAD
-    path: manifests/tungsten
+    path: manifests/transcription-service
   destination:
     server: https://kubernetes.default.svc
-    namespace: tungsten
+    namespace: transcription-service
   syncPolicy:
     automated:
       prune: true
