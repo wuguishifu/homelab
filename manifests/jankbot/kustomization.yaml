@@ -1,0 +1,12 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+# Image Updater writes its digest overrides (for both images) to .argocd-source-jankbot.yaml
+# alongside this. An override applies to every Deployment using that image, so all four gateways
+# roll together.
+resources:
+  - core.yaml
+  - gateway-env.yaml
+  - gateway-bo.yaml
+  - gateway-mikey.yaml
+  - gateway-steven.yaml
+  - gateway-jenn.yaml

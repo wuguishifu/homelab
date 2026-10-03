@@ -1,14 +1,15 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: ruby
+  name: jankbot
   namespace: argocd
   labels:
     group: homelab
   annotations:
     argocd.argoproj.io/sync-wave: "4"
-    argocd-image-updater.argoproj.io/image-list: "ruby=ghcr.io/wuguishifu/universe/ruby:latest"
-    argocd-image-updater.argoproj.io/ruby.update-strategy: digest
+    argocd-image-updater.argoproj.io/image-list: "core=ghcr.io/wuguishifu/universe/jankbot-core:latest,gateway=ghcr.io/wuguishifu/universe/jankbot-gateway:latest"
+    argocd-image-updater.argoproj.io/core.update-strategy: digest
+    argocd-image-updater.argoproj.io/gateway.update-strategy: digest
     argocd-image-updater.argoproj.io/write-back-method: git:secret:argocd/argocd-image-updater-secret
     argocd-image-updater.argoproj.io/git-branch: main
   finalizers:
@@ -18,10 +19,10 @@ spec:
   source:
     repoURL: https://github.com/wuguishifu/homelab.git
     targetRevision: HEAD
-    path: manifests/ruby
+    path: manifests/jankbot
   destination:
     server: https://kubernetes.default.svc
-    namespace: ruby
+    namespace: jankbot
   syncPolicy:
     automated:
       prune: true

@@ -1,0 +1,65 @@
+# Voice bot "Bo", and the primary gateway: its bot owns the slash commands (jankbot-core's
+# DISCORD_TOKEN is the same bot), so it also receives every command and forwards it to core.
+# It holds the bot's gateway and voice connections; its HTTP server only serves health probes.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jankbot-gateway-bo
+  namespace: jankbot
+spec:
+  # Exactly one per bot token: two would fight over the same voice connections. Recreate (not
+  # RollingUpdate) so old and new never overlap during a deploy.
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: jankbot-gateway-bo
+  template:
+    metadata:
+      labels:
+        app: jankbot-gateway-bo
+    spec:
+      # On SIGTERM the gateway leaves its voice channels but remembers them in Redis, so the next
+      # pod rejoins.
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: jankbot-gateway
+          image: ghcr.io/wuguishifu/universe/jankbot-gateway:latest
+          env:
+            - name: ENVIRONMENT
+              value: production
+            - name: ROLE
+              value: primary
+            # Must be listed in VOICE_BOTS (core.yaml).
+            - name: NAME
+              value: Bo
+          envFrom:
+            # Shared settings first, so this bot's own secrets (DISCORD_TOKEN) win.
+            - secretRef:
+                name: jankbot-gateway-secrets
+            - secretRef:
+                name: jankbot-gateway-bo-secrets
+            - configMapRef:
+                name: jankbot-gateway-env
+          ports:
+            - containerPort: 3004
+          resources:
+            requests:
+              cpu: 25m
+              memory: 96Mi
+            limits:
+              # Forwards raw Opus packets to Redis; no decoding happens here.
+              memory: 256Mi
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 3004
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 3004
+            initialDelaySeconds: 5
+            periodSeconds: 10

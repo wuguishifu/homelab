@@ -1,0 +1,9 @@
+# Non-secret settings shared by every gateway. Per-gateway settings (ROLE, NAME) are on each
+# Deployment; secrets come from Infisical (see README.md).
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: jankbot-gateway-env
+  namespace: jankbot
+data:
+  DEBUG_LOGGING: "true"

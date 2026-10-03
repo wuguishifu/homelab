@@ -1,0 +1,71 @@
+# Non-secret settings. Secrets (primary bot token, Redis, Convex, transcription-service token)
+# come from Infisical via jankbot-core-secrets; see README.md.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: jankbot-core-env
+  namespace: jankbot
+data:
+  # The in-cluster interface to transcription-service on the Mac mini
+  # (manifests/transcription-service).
+  TRANSCRIPTION_SERVICE_URL: "http://transcription-service.transcription-service.svc.cluster.local"
+  # Empty: register slash commands globally rather than to dev servers.
+  DISCORD_DEV_GUILD_IDS: ""
+  # Each gateway's NAME. /join sends the first free bot in this order; they're also the choices
+  # for /join and /leave's `bot` option.
+  VOICE_BOTS: "Bo,Mikey,Steven,Jenn"
+  DEBUG_LOGGING: "true"
+---
+# Transcription, phrase matching, Convex, and every slash command. It talks to Discord over HTTP
+# only and takes its work from Redis queues, so it can be redeployed without anyone leaving voice.
+# Its HTTP server only serves health probes, so there's no Service.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jankbot-core
+  namespace: jankbot
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jankbot-core
+  template:
+    metadata:
+      labels:
+        app: jankbot-core
+    spec:
+      # On SIGTERM core lets in-flight utterance and interaction jobs finish; unfinished ones are
+      # retried from Redis.
+      terminationGracePeriodSeconds: 60
+      containers:
+        - name: jankbot-core
+          image: ghcr.io/wuguishifu/universe/jankbot-core:latest
+          env:
+            - name: ENVIRONMENT
+              value: production
+          envFrom:
+            - secretRef:
+                name: jankbot-core-secrets
+            - configMapRef:
+                name: jankbot-core-env
+          ports:
+            - containerPort: 3003
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              # Opus → WAV conversion is light; transcription happens in transcription-service.
+              memory: 512Mi
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 3003
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 3003
+            initialDelaySeconds: 5
+            periodSeconds: 10
