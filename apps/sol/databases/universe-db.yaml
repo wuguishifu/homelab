@@ -1,0 +1,36 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: universe-db
+  namespace: argocd
+  labels:
+    group: databases
+  annotations:
+    # After infisical-secrets (its connection string comes from Infisical); apps that use the
+    # universe database go in a later wave.
+    argocd.argoproj.io/sync-wave: "4"
+    argocd-image-updater.argoproj.io/image-list: "migrations=ghcr.io/wuguishifu/universe/universe-db-migrations:latest"
+    argocd-image-updater.argoproj.io/migrations.update-strategy: digest
+    argocd-image-updater.argoproj.io/write-back-method: git:secret:argocd/argocd-image-updater-secret
+    argocd-image-updater.argoproj.io/git-branch: main
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/wuguishifu/homelab.git
+    targetRevision: HEAD
+    path: manifests/universe-db
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: databases
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    retry:
+      limit: 5
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 5m

@@ -33,6 +33,7 @@ apps/                        # ArgoCD Application resources (App-of-Apps pattern
       redis.yaml             # Shared Bitnami Redis (namespace: databases)
       pgadmin.yaml
       databases-backup.yaml
+      universe-db.yaml       # Runs universe monorepo drizzle migrations on the `universe` database
     system/
       argocd-config.yaml
     homelab/
@@ -50,6 +51,7 @@ manifests/                   # Kubernetes manifests applied by ArgoCD apps
   transcription-service/     # nginx proxy + Service giving pods an address for transcription-service (runs on the mini)
   cloudflared/               # Cloudflare Tunnel connector Deployment
   databases-backup/          # Backup CronJobs and config
+  universe-db/               # Migration hook Job for the `universe` database (see its README)
 
 hosts/                       # Machines outside Kubernetes, managed with their own pull-based reconciler
   mini/                      # Apple M4 Mac mini: services run natively under launchd (see its README)
@@ -63,14 +65,14 @@ minute and applies it, the same GitOps model as ArgoCD. See `hosts/mini/README.m
 
 Apps deploy in waves to respect dependencies:
 
-| Wave | Apps                                                           |
-| ---- | -------------------------------------------------------------- |
-| 0    | cert-manager                                                   |
-| 1    | cert-manager-config, postgresql, redis                         |
-| 2    | argocd-config, infisical, infisical-operator                   |
-| 3    | infisical-secrets                                              |
-| 4    | thermo-automation, jankbot, transcription-service, cloudflared |
-| 5    | garage-webui (depends on garage)                               |
+| Wave | Apps                                                                        |
+| ---- | --------------------------------------------------------------------------- |
+| 0    | cert-manager                                                                |
+| 1    | cert-manager-config, postgresql, redis                                      |
+| 2    | argocd-config, infisical, infisical-operator                                |
+| 3    | infisical-secrets                                                           |
+| 4    | thermo-automation, jankbot, transcription-service, cloudflared, universe-db |
+| 5    | garage-webui (depends on garage), apps that use the `universe` database     |
 
 ## Secrets Architecture
 

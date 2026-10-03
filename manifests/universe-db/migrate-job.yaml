@@ -1,0 +1,35 @@
+# Applies the universe monorepo's drizzle migrations (platform/postgres/utils) to the universe
+# database. A Sync hook runs on every sync of this app, and BeforeHookCreation deletes the previous
+# Job first, so the last run's pod and logs stay around until the next one. Re-running is safe:
+# drizzle skips applied migrations, and the script holds an advisory lock while it migrates.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: universe-db-migrate
+  namespace: databases
+  annotations:
+    argocd.argoproj.io/hook: Sync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+spec:
+  backoffLimit: 2
+  activeDeadlineSeconds: 600
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: migrate
+          image: ghcr.io/wuguishifu/universe/universe-db-migrations:latest
+          env:
+            # The Bitnami chart runs without TLS.
+            - name: UNIVERSE_DB_SSL
+              value: "false"
+          envFrom:
+            # UNIVERSE_DB_CONNECTION_STRING for the universe role; see README.md.
+            - secretRef:
+                name: universe-db-migrator-secrets
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              memory: 256Mi
