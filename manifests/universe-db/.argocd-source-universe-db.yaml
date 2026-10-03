@@ -1,3 +1,3 @@
 kustomize:
   images:
-  - ghcr.io/wuguishifu/universe/universe-db-migrations@sha256:61193a80effd90932602f793c0935a529d7fe25f4fba0bf8eb31c22a5ff99ba3
+  - ghcr.io/wuguishifu/universe/universe-db-migrations@sha256:1d5cf3664e7854b013cf944b136dd19e6f64bea67fc38fd8511ded3699d13dff
