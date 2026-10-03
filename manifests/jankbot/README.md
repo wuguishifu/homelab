@@ -49,9 +49,10 @@ All under the `universe` Infisical project, `prod` environment.
 
 `/projects/jankbot/gateway` (→ `jankbot-gateway-secrets`, shared by every gateway):
 
-| Key         | Description                  |
-| ----------- | ---------------------------- |
-| `REDIS_URL` | The same Redis URL as core's |
+| Key                           | Description                                                |
+| ----------------------------- | ---------------------------------------------------------- |
+| `REDIS_URL`                   | The same Redis URL as core's                               |
+| `ANALYTICS_SERVICE_API_TOKEN` | Same value as `API_TOKEN` in `/platform/analytics/service` |
 
 `/projects/jankbot/gateway/bot-<name>` for `bo`, `mikey`, `steven` and `jenn`
 (→ `jankbot-gateway-<name>-secrets`):

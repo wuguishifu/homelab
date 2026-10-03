@@ -6,4 +6,6 @@ metadata:
   name: jankbot-gateway-env
   namespace: jankbot
 data:
+  # The in-cluster analytics-service.
+  ANALYTICS_SERVICE_BASE_URL: "http://analytics-service.analytics-service.svc.cluster.local"
   DEBUG_LOGGING: "true"
