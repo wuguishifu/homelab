@@ -1,3 +1,0 @@
-kustomize:
-  images:
-  - ghcr.io/wuguishifu/universe/ruby@sha256:03cf3c9e0a111c214da07383f3839343ada7dcfcb3bc3e6150738598fcca0610

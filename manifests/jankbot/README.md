@@ -71,8 +71,7 @@ ConfigMaps (`jankbot-core-env`, `jankbot-gateway-env`), which win over Infisical
       `jankbot/gateway`).
 - [ ] Prod secrets above exist in Infisical.
 - [ ] All four bots are invited to the server.
-- [ ] Nothing else is running with any of these bot tokens (e.g. a local `nx serve`, or ruby if
-      Bo reuses ruby's bot).
+- [ ] Nothing else is running with any of these bot tokens (e.g. a local `nx serve`).
 
 Slash commands register globally in production, so they can take up to an hour to appear.
 
