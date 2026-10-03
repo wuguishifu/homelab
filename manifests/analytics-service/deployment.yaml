@@ -1,0 +1,48 @@
+# Records tracking events from other universe services into the universe database. Secrets
+# (API_TOKEN, UNIVERSE_DB_CONNECTION_STRING) come from Infisical via analytics-service-secrets; see
+# README.md.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: analytics-service
+  namespace: analytics-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: analytics-service
+  template:
+    metadata:
+      labels:
+        app: analytics-service
+    spec:
+      containers:
+        - name: analytics-service
+          image: ghcr.io/wuguishifu/universe/analytics-service:latest
+          env:
+            - name: ENVIRONMENT
+              value: production
+          envFrom:
+            - secretRef:
+                name: analytics-service-secrets
+          ports:
+            - name: http
+              containerPort: 3005
+          resources:
+            requests:
+              cpu: 50m
+              memory: 96Mi
+            limits:
+              memory: 256Mi
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 3005
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 3005
+            initialDelaySeconds: 5
+            periodSeconds: 10

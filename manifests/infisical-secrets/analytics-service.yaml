@@ -1,0 +1,26 @@
+# analytics-service's API token and database credentials; see manifests/analytics-service/README.md.
+apiVersion: secrets.infisical.com/v1alpha1
+kind: InfisicalSecret
+metadata:
+  name: analytics-service-secrets
+  namespace: infisical-operator-system
+spec:
+  hostAPI: https://infisical.wuguishifu.dev/api
+  syncConfig:
+    resyncInterval: 60s
+
+  authentication:
+    universalAuth:
+      credentialsRef:
+        secretName: infisical-machine-identity
+        secretNamespace: infisical-operator-system
+      secretsScope:
+        projectSlug: universe
+        envSlug: prod
+        secretsPath: /platform/analytics/service
+        recursive: false
+
+  managedSecretReference:
+    secretName: analytics-service-secrets
+    secretNamespace: analytics-service
+    secretType: Opaque

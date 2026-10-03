@@ -4,9 +4,15 @@ The `universe` database on the shared PostgreSQL (`databases` namespace), used b
 [universe](https://github.com/wuguishifu/universe) monorepo. Its schema lives in
 `platform/postgres/db` there, and its drizzle migrations in `platform/postgres/utils`.
 
-This app only runs migrations. `migrate-job.yaml` is an ArgoCD Sync hook that runs the
-`universe-db-migrations` image. Image Updater pins its digest, so publishing a new image
-(**Deploy Server App** → `postgres/migrations` in universe) applies any new migrations.
+This app only runs migrations. `migrate-job.yaml` is a Job that runs the `universe-db-migrations`
+image. Image Updater pins its digest, so publishing a new image (**Deploy Server App** →
+`postgres/migrations` in universe) makes the app OutOfSync, and the sync replaces the Job, which
+applies any new migrations.
+
+It's deliberately not a Sync hook: ArgoCD doesn't diff hooks, so an app holding only a hook always
+reads Synced and Healthy, auto-sync never fires, and the hook never runs. As a tracked resource,
+the app is only Healthy once the Job completes, so apps that use the database go in wave 5 and the
+root app waits for migrations before syncing them (on a full sync, e.g. a bootstrap).
 
 Services that use the database deploy on their own, so every migration has to work with the code
 that's already running: add columns and tables first, then ship the code that uses them, and drop
@@ -68,4 +74,4 @@ you've set that role up).
 kubectl logs -n databases job/universe-db-migrate
 ```
 
-A failed Job fails the sync; ArgoCD retries it per the app's retry policy.
+A failed Job leaves the app Degraded. To re-run after fixing it, delete the Job and ArgoCD recreates it.

@@ -1,6 +1,9 @@
 # Applies the universe monorepo's drizzle migrations (platform/postgres/utils) to the universe
-# database. A Sync hook runs on every sync of this app, and BeforeHookCreation deletes the previous
-# Job first, so the last run's pod and logs stay around until the next one. Re-running is safe:
+# database. This is a regular resource rather than a Sync hook: ArgoCD doesn't diff hooks, so an
+# app made only of one always looks Synced and auto-sync never runs it. As a tracked resource, a new
+# image digest from Image Updater makes the app OutOfSync, and since a Job's pod template is
+# immutable, Replace + Force delete and recreate it. The app is also only Healthy once the Job has
+# completed, which is what holds back the wave-5 apps that use the database. Re-running is safe:
 # drizzle skips applied migrations, and the script holds an advisory lock while it migrates.
 apiVersion: batch/v1
 kind: Job
@@ -8,9 +11,10 @@ metadata:
   name: universe-db-migrate
   namespace: databases
   annotations:
-    argocd.argoproj.io/hook: Sync
-    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+    argocd.argoproj.io/sync-options: Replace=true,Force=true
 spec:
+  # No ttlSecondsAfterFinished: if the Job were cleaned up, ArgoCD would see it missing and re-run
+  # it. The completed Job and its logs stay until the next image replaces it.
   backoffLimit: 2
   activeDeadlineSeconds: 600
   template:
