@@ -21,7 +21,8 @@ start. Every gateway is one replica with `Recreate` rollouts, since two pods for
 would fight over its voice connections.
 
 Nothing here has inbound traffic. The HTTP servers (core on 3003, gateways on 3004) only serve
-the kubelet's health probes, so there's no Service, Ingress, or tunnel route.
+the kubelet's health probes, so there's no Service, Ingress, or tunnel route. To reach them
+anyway, see [Hitting a pod's HTTP endpoints](#hitting-a-pods-http-endpoints).
 
 ## Adding or removing a voice bot
 
@@ -83,3 +84,24 @@ sudo kubectl -n jankbot get pods                              # expect 5 pods, a
 sudo kubectl -n jankbot logs deploy/jankbot-core              # expect "Registered 4 global commands"
 sudo kubectl -n jankbot logs deploy/jankbot-gateway-mikey     # expect "Logged in as ..."
 ```
+
+### Hitting a pod's HTTP endpoints
+
+With no Service, the only way in is `kubectl port-forward`, which tunnels through the k3s API. It
+works from your own machine over Tailscale (no `sudo` or SSH needed):
+
+```sh
+kubectl -n jankbot port-forward deploy/jankbot-core 3003:3003
+```
+
+Then, in another terminal:
+
+```sh
+curl localhost:3003/api/version   # {"version":"0.2.6","versionTag":"jankbot-core-v0.2.6",...}
+curl localhost:3003/api/health
+```
+
+For a gateway, forward port 3004 from its Deployment instead, e.g.
+`kubectl -n jankbot port-forward deploy/jankbot-gateway-bo 3004:3004`. To forward more than one
+at a time, give each its own local port (`13004:3004`, `23004:3004`, ...). Stop the forward with
+Ctrl-C.
