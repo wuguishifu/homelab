@@ -11,7 +11,7 @@ HOMELAB_HOME="${HOMELAB_HOME:-$HOME/.homelab}"
 svc_src="$HOMELAB_HOME/repo/hosts/mini/services/$name"
 svc_home="$HOMELAB_HOME/services/$name"
 
-export PATH="/opt/homebrew/opt/node@22/bin:/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+export PATH="/opt/homebrew/opt/node@24/bin:/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin"
 # Services keep persistent files (e.g. models) here; config.env can refer to it.
 export SERVICE_DATA="$svc_home/data"
 

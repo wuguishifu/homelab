@@ -1,6 +1,6 @@
 #!/bin/bash
 # Makes this Mac match hosts/mini in the homelab repo, like a tiny ArgoCD:
-#   - pulls the repo
+#   - pulls the repo and installs the host Brewfile's dependencies (e.g. Node)
 #   - for each services/<name>/: installs the pinned release from wuguishifu/universe and
 #     (re)starts it under launchd whenever anything in that directory changes
 #   - stops services whose directory was removed (their data is kept)
@@ -19,7 +19,7 @@ RELEASES_REPO="wuguishifu/universe"
 KEEP_RELEASES=3
 LOG_MAX_BYTES=$((10 * 1024 * 1024))
 
-export PATH="/opt/homebrew/opt/node@22/bin:/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+export PATH="/opt/homebrew/opt/node@24/bin:/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin"
 export COREPACK_ENABLE_DOWNLOAD_PROMPT=0
 export HOMEBREW_NO_AUTO_UPDATE=1
 
@@ -203,8 +203,20 @@ fi
 trap 'rmdir "$LOCK"' EXIT
 
 if [ "${HOMELAB_SKIP_PULL:-0}" != 1 ]; then
-  git -C "$REPO_DIR" fetch --quiet origin main
-  git -C "$REPO_DIR" reset --quiet --hard origin/main
+  # Logged here because git's own errors carry no timestamp. Services keep running as they are.
+  if ! err=$({ git -C "$REPO_DIR" fetch --quiet origin main && git -C "$REPO_DIR" reset --quiet --hard origin/main; } 2>&1); then
+    log "pull failed: $(echo "$err" | tr '\n' ' ')"
+    exit 1
+  fi
+fi
+
+# PATH above points at the host Brewfile's Node, so it has to be installed before any service.
+if ! brew bundle check --file="$HOST_DIR/Brewfile" --no-upgrade > /dev/null 2>&1; then
+  log "installing host Homebrew dependencies"
+  if ! brew bundle install --file="$HOST_DIR/Brewfile" --no-upgrade --quiet; then
+    log "host Homebrew dependencies failed to install"
+    exit 1
+  fi
 fi
 
 for svc_src in "$HOST_DIR"/services/*/; do

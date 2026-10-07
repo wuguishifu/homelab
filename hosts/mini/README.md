@@ -75,7 +75,7 @@ Everything lives in `~/.homelab/` on the mini: `repo/` (this repo), `services/<n
    curl -fsSL https://raw.githubusercontent.com/wuguishifu/homelab/main/hosts/mini/setup.sh | bash
    ```
 
-   It installs `Brewfile` (Node 22, the Infisical CLI), clones this repo to `~/.homelab/repo`, and
+   It installs `Brewfile` (Node 24, the Infisical CLI), clones this repo to `~/.homelab/repo`, and
    starts the reconciler.
 
 ## Operating
