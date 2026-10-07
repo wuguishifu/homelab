@@ -36,6 +36,7 @@ apps/                        # ArgoCD Application resources (App-of-Apps pattern
       universe-db.yaml       # Runs universe monorepo drizzle migrations on the `universe` database
     system/
       argocd-config.yaml
+      coredns-config.yaml
     homelab/
       thermo-automation.yaml # Daikin thermostat automation service
       jankbot.yaml           # jankbot Discord bot (core + one gateway per voice bot)
@@ -45,6 +46,7 @@ apps/                        # ArgoCD Application resources (App-of-Apps pattern
 
 manifests/                   # Kubernetes manifests applied by ArgoCD apps
   argocd-config/             # ArgoCD ingress + insecure mode configmap
+  coredns-config/            # coredns-custom: in-cluster rewrites for *.wuguishifu.dev names (e.g. redis)
   cert-manager-config/       # ClusterIssuer (letsencrypt-prod, Cloudflare DNS-01)
   infisical-secrets/         # InfisicalSecret CRDs — one file per secret group
   thermo-automation/         # Deployment for thermo-automation
@@ -67,13 +69,13 @@ minute and applies it, the same GitOps model as ArgoCD. See `hosts/mini/README.m
 
 Apps deploy in waves to respect dependencies:
 
-| Wave | Apps                                                                        |
-| ---- | --------------------------------------------------------------------------- |
-| 0    | cert-manager                                                                |
-| 1    | cert-manager-config, postgresql, redis                                      |
-| 2    | argocd-config, infisical, infisical-operator                                |
-| 3    | infisical-secrets                                                           |
-| 4    | thermo-automation, jankbot, transcription-service, cloudflared, universe-db |
+| Wave | Apps                                                                                                |
+| ---- | --------------------------------------------------------------------------------------------------- |
+| 0    | cert-manager                                                                                        |
+| 1    | cert-manager-config, coredns-config, postgresql, redis                                              |
+| 2    | argocd-config, infisical, infisical-operator                                                        |
+| 3    | infisical-secrets                                                                                   |
+| 4    | thermo-automation, jankbot, transcription-service, cloudflared, universe-db                         |
 | 5    | garage-webui (depends on garage), analytics-service and other apps that use the `universe` database |
 
 ## Secrets Architecture

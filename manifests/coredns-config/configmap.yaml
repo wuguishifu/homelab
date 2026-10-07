@@ -1,0 +1,12 @@
+# Split-horizon DNS for shared services that are also exposed off-cluster. Off-cluster (e.g. the
+# mini), the Cloudflare wildcard resolves *.wuguishifu.dev to sol's Tailscale IP; in-cluster, these
+# rewrites send pods straight to the Service, so one connection URL works everywhere.
+# k3s's Corefile imports *.override from this ConfigMap, and CoreDNS reloads it on change.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: coredns-custom
+  namespace: kube-system
+data:
+  redis.override: |
+    rewrite name redis.wuguishifu.dev redis-master.databases.svc.cluster.local

@@ -31,10 +31,34 @@ spec:
               cpu: 250m
               memory: 256Mi
             limits:
-              memory: 512Mi
+              memory: 1Gi
           persistence:
             enabled: true
             size: 2Gi
+        extraDeploy:
+          # Exposes Redis on sol's Tailscale IP via k3s ServiceLB, so off-cluster hosts (the mini)
+          # reach it as redis.wuguishifu.dev:6379; pods resolve that name to redis-master instead
+          # (manifests/coredns-config). ServiceLB binds every interface (LAN too), so only tailnet
+          # clients are accepted. A separate Service rather than master.service.type because the
+          # chart can't disable NodePorts, which kube-proxy opens to the LAN unfiltered.
+          - apiVersion: v1
+            kind: Service
+            metadata:
+              name: redis-tailnet
+              namespace: databases
+            spec:
+              type: LoadBalancer
+              allocateLoadBalancerNodePorts: false
+              loadBalancerSourceRanges:
+                - 100.64.0.0/10
+              selector:
+                app.kubernetes.io/name: redis
+                app.kubernetes.io/instance: redis
+                app.kubernetes.io/component: master
+              ports:
+                - name: tcp-redis
+                  port: 6379
+                  targetPort: redis
   destination:
     server: https://kubernetes.default.svc
     namespace: databases
