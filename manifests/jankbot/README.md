@@ -2,7 +2,8 @@
 
 Discord bot from the [universe](https://github.com/wuguishifu/universe) monorepo (`projects/jankbot`)
 that tracks how often people say chosen phrases in voice channels. It replaces ruby, the old
-single-process bot. Voice clips go to [transcription-service](../transcription-service), and counts
+single-process bot. Voice clips are transcribed by transcription-worker on the Mac mini
+([hosts/mini](../../hosts/mini)) through a BullMQ queue in the shared Redis, and counts
 are stored in Convex (`convex-app`).
 
 A Discord bot can only be in one voice channel per server, so jankbot runs several bots:
@@ -46,7 +47,6 @@ All under the `universe` Infisical project, `prod` environment.
 | `REDIS_URL`                       | `redis://:<password>@redis-master.databases.svc.cluster.local:6379`              |
 | `CONVEX_URL`                      | `convex-app`'s **prod** deployment URL                                           |
 | `RUBY_CONVEX_SECRET`              | Random string (`openssl rand -hex 32`); must match the `convex-app` prod env var |
-| `TRANSCRIPTION_SERVICE_API_TOKEN` | Same value as `API_TOKEN` in `/platform/transcription/service`                   |
 
 `/projects/jankbot/gateway` (→ `jankbot-gateway-secrets`, shared by every gateway):
 

@@ -1,5 +1,5 @@
 #!/bin/bash
-# Runs before every transcription-service start (see run-service.sh). Makes $WHISPER_MODELS_DIR
+# Runs before every transcription-worker start (see run-service.sh). Makes $WHISPER_MODELS_DIR
 # match models.txt: downloads missing or corrupt models, deletes unlisted ones, and fails if
 # WHISPER_MODELS names a model that models.txt doesn't download.
 set -euo pipefail

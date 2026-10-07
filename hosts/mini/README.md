@@ -38,11 +38,11 @@ Everything lives in `~/.homelab/` on the mini: `repo/` (this repo), `services/<n
 
 | File           | Purpose                                                                                   |
 | -------------- | ----------------------------------------------------------------------------------------- |
-| `release`      | Release tag to run, e.g. `transcription-service-v0.1.0`. Change it to deploy or roll back |
+| `release`      | Release tag to run, e.g. `transcription-worker-v0.1.0`. Change it to deploy or roll back  |
 | `config.env`   | Non-secret app settings. Can use `$SERVICE_DATA` (the service's data dir)                 |
 | `service.env`  | Host-side settings: Infisical location, `EXIT_TIMEOUT`, hook settings                     |
 | `Brewfile`     | System dependencies (`brew bundle`)                                                       |
-| `pre-start.sh` | Optional; runs before every start (transcription-service syncs its models here)           |
+| `pre-start.sh` | Optional; runs before every start (transcription-worker syncs its models here)            |
 
 ## Deploying
 
@@ -90,6 +90,6 @@ bash ~/.homelab/repo/hosts/mini/reconcile.sh           # reconcile now instead o
 
 ## Services
 
-- **transcription-service**: speech-to-text API (whisper.cpp on Metal) at `http://bos-mac-mini:3002`
-  over Tailscale, with a local Redis for its queues. Callers need its `API_TOKEN`. It listens on
-  all interfaces, so the token check is what protects it on the LAN.
+- **transcription-worker**: speech-to-text (whisper.cpp on Metal) as a BullMQ worker. It takes
+  jobs from sol's Redis at `redis.wuguishifu.dev:6379` (over Tailscale) and reads audio from S3
+  (garage); callers use universe's transcription client. It listens on no ports.

@@ -1,4 +1,4 @@
-# Non-secret settings. Secrets (primary bot token, Redis, Convex, transcription-service token)
+# Non-secret settings. Secrets (primary bot token, Redis, Convex)
 # come from Infisical via jankbot-core-secrets; see README.md.
 apiVersion: v1
 kind: ConfigMap
@@ -6,9 +6,6 @@ metadata:
   name: jankbot-core-env
   namespace: jankbot
 data:
-  # The in-cluster interface to transcription-service on the Mac mini
-  # (manifests/transcription-service).
-  TRANSCRIPTION_SERVICE_URL: "http://transcription-service.transcription-service.svc.cluster.local"
   # The in-cluster analytics-service.
   ANALYTICS_SERVICE_BASE_URL: "http://analytics-service.analytics-service.svc.cluster.local"
   # Empty: register slash commands globally rather than to dev servers.
@@ -57,7 +54,7 @@ spec:
               cpu: 50m
               memory: 128Mi
             limits:
-              # Opus → WAV conversion is light; transcription happens in transcription-service.
+              # Opus → WAV conversion is light; transcription happens in transcription-worker.
               memory: 512Mi
           livenessProbe:
             httpGet:

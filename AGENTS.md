@@ -40,7 +40,6 @@ apps/                        # ArgoCD Application resources (App-of-Apps pattern
     homelab/
       thermo-automation.yaml # Daikin thermostat automation service
       jankbot.yaml           # jankbot Discord bot (core + one gateway per voice bot)
-      transcription-service.yaml # In-cluster Service pointing at transcription-service on the Mac mini
       analytics-service.yaml # universe analytics-service (uses the `universe` database)
       cloudflared.yaml       # Cloudflare Tunnel connector
 
@@ -51,7 +50,6 @@ manifests/                   # Kubernetes manifests applied by ArgoCD apps
   infisical-secrets/         # InfisicalSecret CRDs — one file per secret group
   thermo-automation/         # Deployment for thermo-automation
   jankbot/                   # jankbot-core and the jankbot-gateway Deployments
-  transcription-service/     # nginx proxy + Service giving pods an address for transcription-service (runs on the mini)
   analytics-service/         # Deployment + in-cluster Service for analytics-service
   cloudflared/               # Cloudflare Tunnel connector Deployment
   databases-backup/          # Backup CronJobs and config
@@ -62,7 +60,7 @@ hosts/                       # Machines outside Kubernetes, managed with their o
 ```
 
 Not everything runs in k3s: `hosts/mini/` describes services that run natively on the Mac mini
-(e.g. transcription-service, which needs Apple Silicon's GPU). The mini pulls this repo every
+(e.g. transcription-worker, which needs Apple Silicon's GPU). The mini pulls this repo every
 minute and applies it, the same GitOps model as ArgoCD. See `hosts/mini/README.md`.
 
 ## Sync Wave Order
@@ -75,7 +73,7 @@ Apps deploy in waves to respect dependencies:
 | 1    | cert-manager-config, coredns-config, postgresql, redis                                              |
 | 2    | argocd-config, infisical, infisical-operator                                                        |
 | 3    | infisical-secrets                                                                                   |
-| 4    | thermo-automation, jankbot, transcription-service, cloudflared, universe-db                         |
+| 4    | thermo-automation, jankbot, cloudflared, universe-db                                                |
 | 5    | garage-webui (depends on garage), analytics-service and other apps that use the `universe` database |
 
 ## Secrets Architecture
