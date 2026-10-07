@@ -51,6 +51,10 @@ spec:
               allocateLoadBalancerNodePorts: false
               loadBalancerSourceRanges:
                 - 100.64.0.0/10
+                # Tailscale on sol SNATs forwarded tailnet traffic (snat-subnet-routes), so it
+                # reaches the ServiceLB pod from sol's cni0 address, not the client's 100.x IP.
+                # LAN traffic isn't SNATed and keeps its 10.21.x source, so it's still dropped.
+                - 10.42.0.1/32
               selector:
                 app.kubernetes.io/name: redis
                 app.kubernetes.io/instance: redis
