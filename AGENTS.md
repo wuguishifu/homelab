@@ -41,6 +41,7 @@ apps/                        # ArgoCD Application resources (App-of-Apps pattern
       thermo-automation.yaml # Daikin thermostat automation service
       jankbot.yaml           # jankbot Discord bot (core + one gateway per voice bot)
       analytics-service.yaml # universe analytics-service (uses the `universe` database)
+      internet-monitor.yaml  # universe internet-monitor (records ISP outages via analytics-service)
       cloudflared.yaml       # Cloudflare Tunnel connector
 
 manifests/                   # Kubernetes manifests applied by ArgoCD apps
@@ -51,6 +52,7 @@ manifests/                   # Kubernetes manifests applied by ArgoCD apps
   thermo-automation/         # Deployment for thermo-automation
   jankbot/                   # jankbot-core and the jankbot-gateway Deployments
   analytics-service/         # Deployment + in-cluster Service for analytics-service
+  internet-monitor/          # Deployment + ConfigMap for internet-monitor
   cloudflared/               # Cloudflare Tunnel connector Deployment
   databases-backup/          # Backup CronJobs and config
   universe-db/               # Migration Job for the `universe` database (see its README)
@@ -67,14 +69,14 @@ minute and applies it, the same GitOps model as ArgoCD. See `hosts/mini/README.m
 
 Apps deploy in waves to respect dependencies:
 
-| Wave | Apps                                                                                                |
-| ---- | --------------------------------------------------------------------------------------------------- |
-| 0    | cert-manager                                                                                        |
-| 1    | cert-manager-config, coredns-config, postgresql, redis                                              |
-| 2    | argocd-config, infisical, infisical-operator                                                        |
-| 3    | infisical-secrets                                                                                   |
-| 4    | thermo-automation, jankbot, cloudflared, universe-db                                                |
-| 5    | garage-webui (depends on garage), analytics-service and other apps that use the `universe` database |
+| Wave | Apps                                                                                                                   |
+| ---- | ---------------------------------------------------------------------------------------------------------------------- |
+| 0    | cert-manager                                                                                                           |
+| 1    | cert-manager-config, coredns-config, postgresql, redis                                                                 |
+| 2    | argocd-config, infisical, infisical-operator                                                                           |
+| 3    | infisical-secrets                                                                                                      |
+| 4    | thermo-automation, jankbot, cloudflared, universe-db                                                                   |
+| 5    | garage-webui (depends on garage), analytics-service, internet-monitor, and other apps that use the `universe` database |
 
 ## Secrets Architecture
 
@@ -96,6 +98,12 @@ Everything else goes through Infisical:
 1. Add the secret value in the Infisical UI at `https://infisical.wuguishifu.dev`
 2. Add an `InfisicalSecret` YAML to `manifests/infisical-secrets/`
 3. Push — ArgoCD syncs the CRD and the operator creates the Kubernetes `Secret`
+
+Credentials several apps share live in shared Infisical groups under `/platform/` (e.g.
+`/platform/redis`, `/platform/analytics/client`) rather than being copied into each app's path. An
+app lists the paths it reads in `secretsPaths` in its universe `environment-config.json`; mirror that
+here with one `InfisicalSecret` per path, synced into the app's namespace, and load them with
+`envFrom` in the same order (later wins). See `manifests/internet-monitor/` for an example.
 
 The machine identity that allows the operator to authenticate with Infisical is stored in `kubectl secret generic infisical-machine-identity -n infisical-operator-system` (also manually created, never in Git).
 

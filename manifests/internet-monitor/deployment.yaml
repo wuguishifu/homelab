@@ -1,0 +1,66 @@
+# Non-secret settings. Secrets come from Infisical; see README.md.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: internet-monitor-env
+  namespace: internet-monitor
+data:
+  # The in-cluster analytics-service.
+  ANALYTICS_SERVICE_BASE_URL: "http://analytics-service.analytics-service.svc.cluster.local"
+---
+# Probes the internet and the router every 15s and records outages as tracking events. Its HTTP
+# server only serves health probes, so there's no Service.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: internet-monitor
+  namespace: internet-monitor
+spec:
+  replicas: 1
+  # Two pods at once would each open and close the same incidents, which live in one Redis key.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: internet-monitor
+  template:
+    metadata:
+      labels:
+        app: internet-monitor
+    spec:
+      containers:
+        - name: internet-monitor
+          image: ghcr.io/wuguishifu/universe/internet-monitor-service:latest
+          env:
+            - name: ENVIRONMENT
+              value: production
+          # In secretsPaths order: a key in a later source wins over the same key in an earlier one.
+          envFrom:
+            - configMapRef:
+                name: internet-monitor-env
+            - secretRef:
+                name: internet-monitor-redis
+            - secretRef:
+                name: internet-monitor-analytics-client
+            - secretRef:
+                name: internet-monitor-secrets
+          ports:
+            - containerPort: 3006
+          resources:
+            requests:
+              cpu: 20m
+              memory: 64Mi
+            limits:
+              memory: 192Mi
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 3006
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 3006
+            initialDelaySeconds: 5
+            periodSeconds: 10

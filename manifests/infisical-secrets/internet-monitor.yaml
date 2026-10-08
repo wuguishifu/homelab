@@ -1,0 +1,81 @@
+# internet-monitor's secrets, one per Infisical path in the app's secretsPaths
+# (universe projects/internet-monitor/service/environment-config.json). The shared /platform/*
+# groups are synced into this namespace rather than copied into the app's own path; see
+# manifests/internet-monitor/README.md.
+apiVersion: secrets.infisical.com/v1alpha1
+kind: InfisicalSecret
+metadata:
+  name: internet-monitor-redis
+  namespace: infisical-operator-system
+spec:
+  hostAPI: https://infisical.wuguishifu.dev/api
+  syncConfig:
+    resyncInterval: 60s
+
+  authentication:
+    universalAuth:
+      credentialsRef:
+        secretName: infisical-machine-identity
+        secretNamespace: infisical-operator-system
+      secretsScope:
+        projectSlug: universe
+        envSlug: prod
+        secretsPath: /platform/redis
+        recursive: false
+
+  managedSecretReference:
+    secretName: internet-monitor-redis
+    secretNamespace: internet-monitor
+    secretType: Opaque
+---
+apiVersion: secrets.infisical.com/v1alpha1
+kind: InfisicalSecret
+metadata:
+  name: internet-monitor-analytics-client
+  namespace: infisical-operator-system
+spec:
+  hostAPI: https://infisical.wuguishifu.dev/api
+  syncConfig:
+    resyncInterval: 60s
+
+  authentication:
+    universalAuth:
+      credentialsRef:
+        secretName: infisical-machine-identity
+        secretNamespace: infisical-operator-system
+      secretsScope:
+        projectSlug: universe
+        envSlug: prod
+        secretsPath: /platform/analytics/client
+        recursive: false
+
+  managedSecretReference:
+    secretName: internet-monitor-analytics-client
+    secretNamespace: internet-monitor
+    secretType: Opaque
+---
+apiVersion: secrets.infisical.com/v1alpha1
+kind: InfisicalSecret
+metadata:
+  name: internet-monitor-secrets
+  namespace: infisical-operator-system
+spec:
+  hostAPI: https://infisical.wuguishifu.dev/api
+  syncConfig:
+    resyncInterval: 60s
+
+  authentication:
+    universalAuth:
+      credentialsRef:
+        secretName: infisical-machine-identity
+        secretNamespace: infisical-operator-system
+      secretsScope:
+        projectSlug: universe
+        envSlug: prod
+        secretsPath: /projects/internet-monitor/service
+        recursive: false
+
+  managedSecretReference:
+    secretName: internet-monitor-secrets
+    secretNamespace: internet-monitor
+    secretType: Opaque
