@@ -9,10 +9,10 @@ spec:
   ingressClassName: traefik
   tls:
     - hosts:
-        - garage.wuguishifu.dev
+        - garage-dev.wuguishifu.dev
       secretName: garage-webui-tls
   rules:
-    - host: garage.wuguishifu.dev
+    - host: garage-dev.wuguishifu.dev
       http:
         paths:
           - path: /

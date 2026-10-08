@@ -1,10 +1,12 @@
 # Garage
 
-Garage is the S3-compatible object store running in the `garage` namespace. The S3 API is exposed at `https://s3.wuguishifu.dev` (Tailscale-only, like everything else behind Traefik).
+Garage is the S3-compatible object store running in the `garage` namespace. The S3 API is exposed at `https://s3-dev.wuguishifu.dev` (Tailscale-only, like everything else behind Traefik).
+
+This in-cluster instance is the **dev** object store, hence the `-dev` hostnames. `s3.wuguishifu.dev` and `garage.wuguishifu.dev` are reserved for a planned production Garage on the TrueNAS box, outside this cluster.
 
 ## Web UI
 
-[garage-webui](https://github.com/khairul169/garage-webui) runs in the same namespace at `https://garage.wuguishifu.dev`. It talks to the Garage admin API in-cluster (`http://garage:3903`) using `GARAGE_ADMIN_TOKEN`, and covers cluster/layout status, buckets, the object browser, and access keys.
+[garage-webui](https://github.com/khairul169/garage-webui) runs in the same namespace at `https://garage-dev.wuguishifu.dev`. It talks to the Garage admin API in-cluster (`http://garage:3903`) using `GARAGE_ADMIN_TOKEN`, and covers cluster/layout status, buckets, the object browser, and access keys.
 
 Login is a single username/password pair from `WEBUI_AUTH_USER_PASS` in the `/garage` Infisical path, in `username:bcrypt_hash` form. Generate a new one with:
 
@@ -24,9 +26,9 @@ alias garage='kubectl -n garage exec -it deploy/garage -- /garage'
 
 ## Client configuration
 
-- **Endpoint:** `https://s3.wuguishifu.dev`
+- **Endpoint:** `https://s3-dev.wuguishifu.dev`
 - **Region:** `garage`
-- **Addressing:** path-style only (`s3.wuguishifu.dev/<bucket>/<key>`). Vhost-style (`<bucket>.s3.wuguishifu.dev`) does not resolve because the `*.wuguishifu.dev` wildcard only covers one label. Most SDKs need `forcePathStyle: true` (JS) / `s3ForcePathStyle` / `use_path_style_endpoint` set.
+- **Addressing:** path-style only (`s3-dev.wuguishifu.dev/<bucket>/<key>`). Vhost-style (`<bucket>.s3-dev.wuguishifu.dev`) does not resolve because the `*.wuguishifu.dev` wildcard only covers one label. Most SDKs need `forcePathStyle: true` (JS) / `s3ForcePathStyle` / `use_path_style_endpoint` set.
 
 ## One-time layout init (fresh cluster only)
 
@@ -81,7 +83,7 @@ garage bucket info <bucket-name>       # lists authorized keys and their permiss
 Follow the standard secrets flow (see `CLAUDE.md`):
 
 1. In the Infisical UI, add the key to the app's secrets path, e.g. `/my-app`:
-   - `S3_ENDPOINT` = `https://s3.wuguishifu.dev`
+   - `S3_ENDPOINT` = `https://s3-dev.wuguishifu.dev`
    - `S3_REGION` = `garage`
    - `S3_BUCKET` = `<bucket-name>`
    - `S3_ACCESS_KEY_ID` = the `GK...` key ID
