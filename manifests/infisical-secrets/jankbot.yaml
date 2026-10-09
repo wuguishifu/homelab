@@ -155,3 +155,112 @@ spec:
     secretName: jankbot-gateway-jenn-secrets
     secretNamespace: jankbot
     secretType: Opaque
+---
+# Settings core and the stitcher share (RECORDINGS_S3_BUCKET). Used by both.
+apiVersion: secrets.infisical.com/v1alpha1
+kind: InfisicalSecret
+metadata:
+  name: jankbot-common
+  namespace: infisical-operator-system
+spec:
+  hostAPI: https://infisical.wuguishifu.dev/api
+  syncConfig:
+    resyncInterval: 60s
+
+  authentication:
+    universalAuth:
+      credentialsRef:
+        secretName: infisical-machine-identity
+        secretNamespace: infisical-operator-system
+      secretsScope:
+        projectSlug: universe
+        envSlug: prod
+        secretsPath: /projects/jankbot/common
+        recursive: false
+
+  managedSecretReference:
+    secretName: jankbot-common
+    secretNamespace: jankbot
+    secretType: Opaque
+---
+# The shared /platform/* groups are synced into this namespace once, and used by both core and
+# the stitcher, rather than copied into their paths.
+apiVersion: secrets.infisical.com/v1alpha1
+kind: InfisicalSecret
+metadata:
+  name: jankbot-s3
+  namespace: infisical-operator-system
+spec:
+  hostAPI: https://infisical.wuguishifu.dev/api
+  syncConfig:
+    resyncInterval: 60s
+
+  authentication:
+    universalAuth:
+      credentialsRef:
+        secretName: infisical-machine-identity
+        secretNamespace: infisical-operator-system
+      secretsScope:
+        projectSlug: universe
+        envSlug: prod
+        secretsPath: /platform/s3
+        recursive: false
+
+  managedSecretReference:
+    secretName: jankbot-s3
+    secretNamespace: jankbot
+    secretType: Opaque
+---
+# UNIVERSE_DB_CONNECTION_STRING, for jankbot.recordings. Used by core and the stitcher.
+apiVersion: secrets.infisical.com/v1alpha1
+kind: InfisicalSecret
+metadata:
+  name: jankbot-postgres
+  namespace: infisical-operator-system
+spec:
+  hostAPI: https://infisical.wuguishifu.dev/api
+  syncConfig:
+    resyncInterval: 60s
+
+  authentication:
+    universalAuth:
+      credentialsRef:
+        secretName: infisical-machine-identity
+        secretNamespace: infisical-operator-system
+      secretsScope:
+        projectSlug: universe
+        envSlug: prod
+        secretsPath: /platform/postgres
+        recursive: false
+
+  managedSecretReference:
+    secretName: jankbot-postgres
+    secretNamespace: jankbot
+    secretType: Opaque
+---
+# REDIS_URL. Used by the stitcher; core and the gateways have their own in their paths.
+apiVersion: secrets.infisical.com/v1alpha1
+kind: InfisicalSecret
+metadata:
+  name: jankbot-redis
+  namespace: infisical-operator-system
+spec:
+  hostAPI: https://infisical.wuguishifu.dev/api
+  syncConfig:
+    resyncInterval: 60s
+
+  authentication:
+    universalAuth:
+      credentialsRef:
+        secretName: infisical-machine-identity
+        secretNamespace: infisical-operator-system
+      secretsScope:
+        projectSlug: universe
+        envSlug: prod
+        secretsPath: /platform/redis
+        recursive: false
+
+  managedSecretReference:
+    secretName: jankbot-redis
+    secretNamespace: jankbot
+    secretType: Opaque

@@ -1,16 +1,15 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: jankbot
+  name: media-tools
   namespace: argocd
   labels:
     group: homelab
   annotations:
-    argocd.argoproj.io/sync-wave: "4"
-    argocd-image-updater.argoproj.io/image-list: "core=ghcr.io/wuguishifu/universe/jankbot-core:latest,gateway=ghcr.io/wuguishifu/universe/jankbot-gateway:latest,stitcher=ghcr.io/wuguishifu/universe/jankbot-stitcher:latest"
-    argocd-image-updater.argoproj.io/core.update-strategy: digest
-    argocd-image-updater.argoproj.io/gateway.update-strategy: digest
-    argocd-image-updater.argoproj.io/stitcher.update-strategy: digest
+    # Before the apps that mount its binaries (jankbot-stitcher, in wave 4).
+    argocd.argoproj.io/sync-wave: "3"
+    argocd-image-updater.argoproj.io/image-list: "tools=ghcr.io/wuguishifu/media-tools:latest"
+    argocd-image-updater.argoproj.io/tools.update-strategy: digest
     argocd-image-updater.argoproj.io/write-back-method: git:secret:argocd/argocd-image-updater-secret
     argocd-image-updater.argoproj.io/git-branch: main
   finalizers:
@@ -20,10 +19,10 @@ spec:
   source:
     repoURL: https://github.com/wuguishifu/homelab.git
     targetRevision: HEAD
-    path: manifests/jankbot
+    path: manifests/media-tools
   destination:
     server: https://kubernetes.default.svc
-    namespace: jankbot
+    namespace: media-tools
   syncPolicy:
     automated:
       prune: true

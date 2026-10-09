@@ -39,7 +39,8 @@ apps/                        # ArgoCD Application resources (App-of-Apps pattern
       coredns-config.yaml
     homelab/
       thermo-automation.yaml # Daikin thermostat automation service
-      jankbot.yaml           # jankbot Discord bot (core + one gateway per voice bot)
+      jankbot.yaml           # jankbot Discord bot (core, stitcher, and one gateway per voice bot)
+      media-tools.yaml       # ffmpeg/ffprobe/yt-dlp in /opt/media-tools on sol, for other apps to mount
       analytics-service.yaml # universe analytics-service (uses the `universe` database)
       internet-monitor.yaml  # universe internet-monitor (records ISP outages via analytics-service)
       cloudflared.yaml       # Cloudflare Tunnel connector
@@ -50,7 +51,8 @@ manifests/                   # Kubernetes manifests applied by ArgoCD apps
   cert-manager-config/       # ClusterIssuer (letsencrypt-prod, Cloudflare DNS-01)
   infisical-secrets/         # InfisicalSecret CRDs — one file per secret group
   thermo-automation/         # Deployment for thermo-automation
-  jankbot/                   # jankbot-core and the jankbot-gateway Deployments
+  jankbot/                   # jankbot-core, jankbot-stitcher and the jankbot-gateway Deployments
+  media-tools/               # media-tools Deployment (hostPath /opt/media-tools) and how to mount it
   analytics-service/         # Deployment + in-cluster Service for analytics-service
   internet-monitor/          # Deployment + ConfigMap for internet-monitor
   cloudflared/               # Cloudflare Tunnel connector Deployment
@@ -74,7 +76,7 @@ Apps deploy in waves to respect dependencies:
 | 0    | cert-manager                                                                                                           |
 | 1    | cert-manager-config, coredns-config, postgresql, redis                                                                 |
 | 2    | argocd-config, infisical, infisical-operator                                                                           |
-| 3    | infisical-secrets                                                                                                      |
+| 3    | infisical-secrets, media-tools                                                                                         |
 | 4    | thermo-automation, jankbot, cloudflared, universe-db                                                                   |
 | 5    | garage-webui (depends on garage), analytics-service, internet-monitor, and other apps that use the `universe` database |
 

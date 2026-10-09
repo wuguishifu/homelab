@@ -1,0 +1,49 @@
+# Keeps ffmpeg, ffprobe and yt-dlp in /opt/media-tools on sol for other apps to mount read-only,
+# so the binaries live in one place instead of in every image. See README.md.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: media-tools
+  namespace: media-tools
+spec:
+  replicas: 1
+  # Two pods would both write the same host directory.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: media-tools
+  template:
+    metadata:
+      labels:
+        app: media-tools
+    spec:
+      containers:
+        - name: media-tools
+          image: ghcr.io/wuguishifu/media-tools:latest
+          # `run`: copy the binaries into /out, then check for a new yt-dlp daily. Each binary is
+          # replaced with an atomic rename, so a consumer mid-run keeps its copy.
+          args: ["run"]
+          env:
+            - name: YTDLP_UPDATE_INTERVAL
+              value: "86400"
+          volumeMounts:
+            - name: bin
+              mountPath: /out
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+            limits:
+              # Only the copy at startup and yt-dlp's daily download.
+              memory: 128Mi
+          readinessProbe:
+            exec:
+              command: ["test", "-x", "/out/ffmpeg"]
+            periodSeconds: 30
+      volumes:
+        # A host directory rather than a PVC, so apps in any namespace can mount the same files.
+        - name: bin
+          hostPath:
+            path: /opt/media-tools
+            type: DirectoryOrCreate

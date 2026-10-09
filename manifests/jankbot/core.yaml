@@ -1,5 +1,5 @@
-# Non-secret settings. Secrets (primary bot token, Redis, Convex)
-# come from Infisical via jankbot-core-secrets; see README.md.
+# Non-secret settings. Secrets (primary bot token, Redis, Convex, S3, Postgres) come from
+# Infisical; see README.md.
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -42,9 +42,17 @@ spec:
           env:
             - name: ENVIRONMENT
               value: production
+          # In secretsPaths order (universe projects/jankbot/core/environment-config.json): a key in a
+          # later source wins. The ConfigMap is last, so its settings win over Infisical.
           envFrom:
             - secretRef:
                 name: jankbot-core-secrets
+            - secretRef:
+                name: jankbot-common
+            - secretRef:
+                name: jankbot-s3
+            - secretRef:
+                name: jankbot-postgres
             - configMapRef:
                 name: jankbot-core-env
           ports:

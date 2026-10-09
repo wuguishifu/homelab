@@ -1,0 +1,92 @@
+# Non-secret settings. Secrets come from Infisical; see README.md.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: jankbot-stitcher-env
+  namespace: jankbot
+data:
+  # media-tools' copy, mounted below.
+  FFMPEG_PATH: /opt/media-tools/ffmpeg
+  DEBUG_LOGGING: "true"
+---
+# Compiles each finished voice session's tracked phrases into one audio file per phrase, in S3.
+# Its work comes from the stitch-sessions queue (added by the gateways when a session ends), and
+# its HTTP server only serves health probes, so there's no Service.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jankbot-stitcher
+  namespace: jankbot
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jankbot-stitcher
+  template:
+    metadata:
+      labels:
+        app: jankbot-stitcher
+    spec:
+      # On SIGTERM the stitcher finishes the session it's on, which for a very long one takes a few
+      # minutes. If it's killed first, BullMQ hands the session to the next pod to redo.
+      terminationGracePeriodSeconds: 300
+      containers:
+        - name: jankbot-stitcher
+          image: ghcr.io/wuguishifu/universe/jankbot-stitcher:latest
+          env:
+            - name: ENVIRONMENT
+              value: production
+          # In secretsPaths order (universe projects/jankbot/stitcher/environment-config.json): a
+          # key in a later source wins. The ConfigMap is last, so its settings win over Infisical.
+          envFrom:
+            - secretRef:
+                name: jankbot-common
+            - secretRef:
+                name: jankbot-redis
+            - secretRef:
+                name: jankbot-s3
+            - secretRef:
+                name: jankbot-postgres
+            - configMapRef:
+                name: jankbot-stitcher-env
+          ports:
+            - containerPort: 3007
+          volumeMounts:
+            - name: media-tools
+              mountPath: /opt/media-tools
+              readOnly: true
+            - name: tmp
+              mountPath: /tmp
+          resources:
+            requests:
+              cpu: 50m
+              memory: 192Mi
+            limits:
+              # Memory doesn't grow with the session: it reads a few utterances at a time and builds
+              # compilations on disk. A 6,000-recording test session peaked at ~200MB.
+              memory: 512Mi
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 3007
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 3007
+            initialDelaySeconds: 5
+            periodSeconds: 10
+      volumes:
+        # ffmpeg from media-tools (manifests/media-tools). The stitcher checks on startup that it
+        # runs and has libopus.
+        - name: media-tools
+          hostPath:
+            path: /opt/media-tools
+            # The pod waits until media-tools has created it.
+            type: Directory
+        # Compilations are built here as raw PCM (~115MB per hour of compiled audio), one phrase
+        # at a time.
+        - name: tmp
+          emptyDir:
+            sizeLimit: 4Gi
