@@ -1,0 +1,3 @@
+kustomize:
+  images:
+  - ghcr.io/wuguishifu/media-tools@sha256:93a525407d667498c618acb5aadc25223307992a2d2d0973199b414ed087ecab
