@@ -38,6 +38,30 @@ spec:
           persistence:
             enabled: true
             size: 8Gi
+        extraDeploy:
+          # Exposes PostgreSQL on sol's Tailscale IP via k3s ServiceLB, so off-cluster clients reach
+          # it as postgres.wuguishifu.dev:5432; pods resolve that name to the postgresql Service
+          # instead (manifests/coredns-config). Same pattern and caveats as redis-tailnet in redis.yaml.
+          - apiVersion: v1
+            kind: Service
+            metadata:
+              name: postgresql-tailnet
+              namespace: databases
+            spec:
+              type: LoadBalancer
+              allocateLoadBalancerNodePorts: false
+              loadBalancerSourceRanges:
+                - 100.64.0.0/10
+                # Tailscale on sol SNATs forwarded tailnet traffic to sol's cni0 address (see redis.yaml).
+                - 10.42.0.1/32
+              selector:
+                app.kubernetes.io/name: postgresql
+                app.kubernetes.io/instance: postgresql
+                app.kubernetes.io/component: primary
+              ports:
+                - name: tcp-postgresql
+                  port: 5432
+                  targetPort: tcp-postgresql
   destination:
     server: https://kubernetes.default.svc
     namespace: databases

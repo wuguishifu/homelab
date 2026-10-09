@@ -29,8 +29,8 @@ apps/                        # ArgoCD Application resources (App-of-Apps pattern
       infisical-operator.yaml
       infisical-secrets.yaml # Deploys InfisicalSecret CRDs from manifests/infisical-secrets/
     databases/
-      postgresql.yaml        # Shared Bitnami PostgreSQL (namespace: databases)
-      redis.yaml             # Shared Bitnami Redis (namespace: databases)
+      postgresql.yaml        # Shared Bitnami PostgreSQL (namespace: databases); tailnet: postgres.wuguishifu.dev:5432
+      redis.yaml             # Shared Bitnami Redis (namespace: databases); tailnet: redis.wuguishifu.dev:6379
       pgadmin.yaml
       databases-backup.yaml
       universe-db.yaml       # Runs universe monorepo drizzle migrations on the `universe` database
@@ -47,7 +47,7 @@ apps/                        # ArgoCD Application resources (App-of-Apps pattern
 
 manifests/                   # Kubernetes manifests applied by ArgoCD apps
   argocd-config/             # ArgoCD ingress + insecure mode configmap
-  coredns-config/            # coredns-custom: in-cluster rewrites for *.wuguishifu.dev names (e.g. redis)
+  coredns-config/            # coredns-custom: in-cluster rewrites for *.wuguishifu.dev names (redis, postgres)
   cert-manager-config/       # ClusterIssuer (letsencrypt-prod, Cloudflare DNS-01)
   infisical-secrets/         # InfisicalSecret CRDs — one file per secret group
   thermo-automation/         # Deployment for thermo-automation

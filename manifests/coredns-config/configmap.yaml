@@ -10,3 +10,5 @@ metadata:
 data:
   redis.override: |
     rewrite name redis.wuguishifu.dev redis-master.databases.svc.cluster.local
+  postgres.override: |
+    rewrite name postgres.wuguishifu.dev postgresql.databases.svc.cluster.local
