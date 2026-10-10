@@ -5,6 +5,8 @@ metadata:
   name: jankbot-stitcher-env
   namespace: jankbot
 data:
+  # The in-cluster analytics-service.
+  ANALYTICS_SERVICE_BASE_URL: "http://analytics-service.analytics-service.svc.cluster.local"
   # media-tools' copy, mounted below.
   FFMPEG_PATH: /opt/media-tools/ffmpeg
   DEBUG_LOGGING: "true"
@@ -42,11 +44,13 @@ spec:
             - secretRef:
                 name: jankbot-common
             - secretRef:
-                name: jankbot-redis
-            - secretRef:
                 name: jankbot-s3
             - secretRef:
+                name: jankbot-analytics-client
+            - secretRef:
                 name: jankbot-postgres
+            - secretRef:
+                name: jankbot-redis
             - configMapRef:
                 name: jankbot-stitcher-env
           ports:

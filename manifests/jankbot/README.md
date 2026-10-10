@@ -78,6 +78,7 @@ Shared paths, synced once into the `jankbot` namespace and loaded by core and th
 | `/projects/jankbot/common` | `jankbot-common`   | `RECORDINGS_S3_BUCKET`, `DISCORD_TOKEN`    | core, stitcher   |
 | `/platform/redis`          | `jankbot-redis`    | `REDIS_URL`                                | stitcher         |
 | `/platform/s3`             | `jankbot-s3`       | `S3_ENDPOINT`, `S3_REGION`, keys, ...      | core, stitcher   |
+| `/platform/analytics/client` | `jankbot-analytics-client` | `ANALYTICS_SERVICE_API_TOKEN` | stitcher |
 | `/platform/postgres`       | `jankbot-postgres` | `UNIVERSE_DB_CONNECTION_STRING`            | core, stitcher   |
 
 `/projects/jankbot/common`'s `DISCORD_TOKEN` comes after core's own path, so it's the one core
@@ -85,7 +86,7 @@ uses: keep it Bo's token. The stitcher doesn't use it. `S3_ENDPOINT` is the prod
 (`s3.wuguishifu.dev`, outside the cluster, over Tailscale), not this cluster's `s3-dev`.
 
 `ROLE` and `NAME` are set on each Deployment, and the rest of the non-secret settings are in the
-ConfigMaps (`jankbot-core-env`, `jankbot-gateway-env`), which win over Infisical.
+ConfigMaps (`jankbot-core-env`, `jankbot-stitcher-env`, `jankbot-gateway-env`), which win over Infisical.
 
 ## Before the first deploy
 

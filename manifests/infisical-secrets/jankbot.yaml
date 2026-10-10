@@ -264,3 +264,30 @@ spec:
     secretName: jankbot-redis
     secretNamespace: jankbot
     secretType: Opaque
+---
+# ANALYTICS_SERVICE_API_TOKEN. Used by the stitcher; the gateways have their own in their path.
+apiVersion: secrets.infisical.com/v1alpha1
+kind: InfisicalSecret
+metadata:
+  name: jankbot-analytics-client
+  namespace: infisical-operator-system
+spec:
+  hostAPI: https://infisical.wuguishifu.dev/api
+  syncConfig:
+    resyncInterval: 60s
+
+  authentication:
+    universalAuth:
+      credentialsRef:
+        secretName: infisical-machine-identity
+        secretNamespace: infisical-operator-system
+      secretsScope:
+        projectSlug: universe
+        envSlug: prod
+        secretsPath: /platform/analytics/client
+        recursive: false
+
+  managedSecretReference:
+    secretName: jankbot-analytics-client
+    secretNamespace: jankbot
+    secretType: Opaque
