@@ -35,6 +35,10 @@ spec:
                   key: WEBUI_AUTH_USER_PASS
           ports:
             - containerPort: 3909
+          volumeMounts:
+            # The image is FROM scratch with no /tmp; Go spills large multipart uploads there.
+            - name: tmp
+              mountPath: /tmp
           readinessProbe:
             httpGet:
               path: /
@@ -47,3 +51,6 @@ spec:
               port: 3909
             initialDelaySeconds: 15
             periodSeconds: 30
+      volumes:
+        - name: tmp
+          emptyDir: {}
