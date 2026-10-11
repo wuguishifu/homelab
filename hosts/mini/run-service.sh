@@ -1,9 +1,10 @@
 #!/bin/bash
 # launchd entrypoint for a service defined in hosts/mini/services/<name>/:
 #   1. loads secrets from Infisical when service.env sets INFISICAL_PATHS
-#   2. runs pre-start.sh, if any, with those secrets, service.env and config.env
+#   2. runs pre-start.sh, if any, with those secrets, the ones at PRE_START_INFISICAL_PATHS,
+#      service.env and config.env
 #   3. starts the release in ~/.homelab/services/<name>/current with `node main.js`, with the
-#      secrets and config.env
+#      INFISICAL_PATHS secrets and config.env
 # Usage: run-service.sh <name>
 set -euo pipefail
 
@@ -35,7 +36,8 @@ echo "--- $(date '+%Y-%m-%dT%H:%M:%S') starting $name ($(readlink "$svc_home/cur
 cd "$svc_home/current"
 
 infisical_paths=$(read_service_env INFISICAL_PATHS)
-if [ -n "$infisical_paths" ]; then
+pre_start_infisical_paths=$(read_service_env PRE_START_INFISICAL_PATHS)
+if [ -n "$infisical_paths$pre_start_infisical_paths" ]; then
   infisical_domain=$(read_service_env INFISICAL_DOMAIN)
   # Machine identity credentials stay in this subshell; only the short-lived token comes out.
   token=$(
@@ -47,10 +49,14 @@ if [ -n "$infisical_paths" ]; then
   )
   project_id=$(read_service_env INFISICAL_PROJECT_ID)
   infisical_env=$(read_service_env INFISICAL_ENV)
+fi
 
-  # Export each path's secrets in order, so a key in a later path wins (like universe's
-  # secretsPaths). They only live in this process's environment, never on disk.
-  for secrets_path in $infisical_paths; do
+# Exports the secrets at each of the space-separated Infisical paths in $1, in order, so a key in a
+# later path wins (like universe's secretsPaths). They only live in this process's environment,
+# never on disk.
+load_secrets() {
+  local secrets_path exports
+  for secrets_path in $1; do
     exports=$(
       infisical export \
         --domain="$infisical_domain" --token="$token" --projectId="$project_id" \
@@ -59,16 +65,20 @@ if [ -n "$infisical_paths" ]; then
     )
     eval "$exports"
   done
-fi
+}
 
-# After the secrets, so pre-start.sh can use them (e.g. a token to download gated models). It also
-# gets service.env's host-side settings, in a subshell so they stay out of the app's environment.
+load_secrets "$infisical_paths"
+
+# After the secrets, so pre-start.sh can use them. It runs in a subshell so what only it needs
+# stays out of the app's environment: service.env's host-side settings, and the secrets at
+# PRE_START_INFISICAL_PATHS (e.g. a token to download gated models).
 if [ -f "$svc_src/pre-start.sh" ]; then
   (
     set -a
     # shellcheck source=/dev/null
     . "$svc_src/service.env"
     set +a
+    load_secrets "$pre_start_infisical_paths"
     load_config
     /bin/bash "$svc_src/pre-start.sh"
   )

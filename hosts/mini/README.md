@@ -27,8 +27,8 @@ release bundle (.tar.gz)                 = "<app>-vX.Y.Z"               (launchd
   the previous version keeps running. It only logs when it does something.
 
 - **`run-service.sh`** is each service's launchd entrypoint: it loads secrets from Infisical,
-  runs `pre-start.sh` (which can use them), then `node main.js` with the secrets plus
-  `config.env` (which wins over Infisical).
+  runs `pre-start.sh` (which can use them, plus any only it gets), then `node main.js` with the
+  secrets plus `config.env` (which wins over Infisical).
 - **launchd** restarts crashed services (within ~10s), starts everything at login, and on
   deploys sends SIGTERM and waits `EXIT_TIMEOUT` so in-flight work can finish.
 
@@ -41,9 +41,9 @@ Everything lives in `~/.homelab/` on the mini: `repo/` (this repo), `services/<n
 | -------------- | ----------------------------------------------------------------------------------------- |
 | `release`      | Release tag to run, e.g. `transcription-worker-v0.1.0`. Change it to deploy or roll back  |
 | `config.env`   | Non-secret app settings. Can use `$SERVICE_DATA` (the service's data dir)                 |
-| `service.env`  | Host-side settings: Infisical location, `EXIT_TIMEOUT`, hook settings                     |
+| `service.env`  | Host-side settings: Infisical location and secret paths (`INFISICAL_PATHS` for the app and `pre-start.sh`, `PRE_START_INFISICAL_PATHS` for `pre-start.sh` only), `EXIT_TIMEOUT`, hook settings |
 | `Brewfile`     | System dependencies (`brew bundle`)                                                       |
-| `pre-start.sh` | Optional; runs before every start, with the secrets, `service.env` and `config.env` (transcription-worker syncs its models and diarizer here) |
+| `pre-start.sh` | Optional; runs before every start, with the secrets (both sets), `service.env` and `config.env` (transcription-worker syncs its models and diarizer here) |
 
 ## Deploying
 

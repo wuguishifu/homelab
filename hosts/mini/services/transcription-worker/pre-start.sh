@@ -51,8 +51,12 @@ if [ -n "${DIARIZER_PATH:-}" ] && [ -d "$release_diarizer" ]; then
   UV_PROJECT_ENVIRONMENT="$venv" uv sync --project "$release_diarizer" \
     --frozen --no-dev --no-editable --compile-bytecode --quiet
   # The first import after an install takes ~30s (macOS checks the new native libraries), so pay
-  # it here rather than in the first job. ~1s once it's warm.
-  "$venv/bin/python" -c 'import torch, pyannote.audio' 2> /dev/null
+  # it here rather than in the first job. ~1s once it's warm. Its output is only shown if it fails.
+  if ! import_output=$("$venv/bin/python" -c 'import torch, pyannote.audio' 2>&1); then
+    echo "diarizer: importing torch and pyannote.audio failed:" >&2
+    echo "$import_output" >&2
+    exit 1
+  fi
 
   if [ "$(cat "$DIARIZER_MODEL_DIR/.revision" 2> /dev/null)" != "$PYANNOTE_REVISION" ]; then
     echo "diarizer: downloading pyannote/speaker-diarization-community-1@$PYANNOTE_REVISION"
