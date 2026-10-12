@@ -32,7 +32,7 @@ Mount the whole directory, not single files: a single-file mount keeps pointing 
 after an update replaces it. `ffmpeg` and `ffprobe` are fully static, so they run in any image;
 `yt-dlp` needs glibc (Debian, Ubuntu, `*-slim`), not Alpine.
 
-Used by: `jankbot-stitcher` (`manifests/jankbot`).
+Used by: `jankbot-stitcher` (`manifests/jankbot`), `clipper-service` (`manifests/clipper-service`).
 
 ## Checking it
 

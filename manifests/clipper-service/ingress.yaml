@@ -1,0 +1,27 @@
+# Tailnet only, like everything on *.wuguishifu.dev: for the backlog scripts (universe
+# tools/scripts/media) and the Windows client. Every route but /api/health and /api/version needs
+# API_TOKEN.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: clipper-service
+  namespace: clipper-service
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - clipper.wuguishifu.dev
+      secretName: clipper-service-tls
+  rules:
+    - host: clipper.wuguishifu.dev
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: clipper-service
+                port:
+                  number: 80

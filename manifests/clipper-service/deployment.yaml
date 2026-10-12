@@ -1,0 +1,100 @@
+# Non-secret settings. Secrets come from Infisical; see README.md.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: clipper-service-env
+  namespace: clipper-service
+data:
+  # The in-cluster analytics-service.
+  ANALYTICS_SERVICE_BASE_URL: "http://analytics-service.analytics-service.svc.cluster.local"
+  # media-tools' copy, mounted below.
+  FFMPEG_PATH: /opt/media-tools/ffmpeg
+  # Once a UTC day's Gemini spend reaches this, clip jobs wait for the next day.
+  CLIPPER_DAILY_SPEND_LIMIT_USD: "100"
+---
+# Finds the moments worth posting in Medal clips: takes runs of clips over HTTP, and analyzes each
+# clip's proxy (from Garage) with Gemini off the clipper-queue:analyze queue, 6 at a time. Results
+# go to Convex.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: clipper-service
+  namespace: clipper-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: clipper-service
+  template:
+    metadata:
+      labels:
+        app: clipper-service
+    spec:
+      # On SIGTERM it aborts the Gemini calls in flight; their clip jobs go back on the queue and
+      # are retried, so this only has to cover saving that.
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: clipper-service
+          image: ghcr.io/wuguishifu/universe/clipper-service:latest
+          env:
+            - name: ENVIRONMENT
+              value: production
+          # In secretsPaths order (universe projects/clipper/service/environment-config.json): a
+          # key in a later source wins. The ConfigMap is last, so its settings win over Infisical.
+          envFrom:
+            - secretRef:
+                name: clipper-service-gemini
+            - secretRef:
+                name: clipper-service-s3
+            - secretRef:
+                name: clipper-service-analytics-client
+            - secretRef:
+                name: clipper-service-redis
+            # CONVEX_URL; not a secretsPath, since locally it comes from hasConvex.
+            - secretRef:
+                name: clipper-service-convex
+            - secretRef:
+                name: clipper-service-secrets
+            - configMapRef:
+                name: clipper-service-env
+          ports:
+            - name: http
+              containerPort: 3008
+          volumeMounts:
+            - name: media-tools
+              mountPath: /opt/media-tools
+              readOnly: true
+            - name: tmp
+              mountPath: /tmp
+          resources:
+            requests:
+              cpu: 100m
+              memory: 192Mi
+            limits:
+              # Each of the 6 clips in flight holds its proxy (~4MB, at most 18MB) and its base64
+              # copy for the request.
+              memory: 1Gi
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 3008
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 3008
+            initialDelaySeconds: 5
+            periodSeconds: 10
+      volumes:
+        # ffmpeg from media-tools (manifests/media-tools). The service checks on startup that it
+        # runs and has libx264 and aac.
+        - name: media-tools
+          hostPath:
+            path: /opt/media-tools
+            # The pod waits until media-tools has created it.
+            type: Directory
+        # Each clip in flight downloads its proxy here and cuts what's sent from it.
+        - name: tmp
+          emptyDir:
+            sizeLimit: 2Gi

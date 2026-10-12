@@ -43,6 +43,7 @@ apps/                        # ArgoCD Application resources (App-of-Apps pattern
       media-tools.yaml       # ffmpeg/ffprobe/yt-dlp in /opt/media-tools on sol, for other apps to mount
       analytics-service.yaml # universe analytics-service (uses the `universe` database)
       internet-monitor.yaml  # universe internet-monitor (records ISP outages via analytics-service)
+      clipper-service.yaml   # universe clipper-service (finds moments in Medal clips with Gemini)
       cloudflared.yaml       # Cloudflare Tunnel connector
 
 manifests/                   # Kubernetes manifests applied by ArgoCD apps
@@ -55,6 +56,7 @@ manifests/                   # Kubernetes manifests applied by ArgoCD apps
   media-tools/               # media-tools Deployment (hostPath /opt/media-tools) and how to mount it
   analytics-service/         # Deployment + in-cluster Service for analytics-service
   internet-monitor/          # Deployment + ConfigMap for internet-monitor
+  clipper-service/           # Deployment, Service and tailnet Ingress for clipper-service
   cloudflared/               # Cloudflare Tunnel connector Deployment
   databases-backup/          # Backup CronJobs and config
   universe-db/               # Migration Job for the `universe` database (see its README)
@@ -71,14 +73,14 @@ minute and applies it, the same GitOps model as ArgoCD. See `hosts/mini/README.m
 
 Apps deploy in waves to respect dependencies:
 
-| Wave | Apps                                                                                                                   |
-| ---- | ---------------------------------------------------------------------------------------------------------------------- |
-| 0    | cert-manager                                                                                                           |
-| 1    | cert-manager-config, coredns-config, postgresql, redis                                                                 |
-| 2    | argocd-config, infisical, infisical-operator                                                                           |
-| 3    | infisical-secrets, media-tools                                                                                         |
-| 4    | thermo-automation, jankbot, cloudflared, universe-db                                                                   |
-| 5    | garage-webui (depends on garage), analytics-service, internet-monitor, and other apps that use the `universe` database |
+| Wave | Apps                                                                                                                                    |
+| ---- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| 0    | cert-manager                                                                                                                            |
+| 1    | cert-manager-config, coredns-config, postgresql, redis                                                                                  |
+| 2    | argocd-config, infisical, infisical-operator                                                                                            |
+| 3    | infisical-secrets, media-tools                                                                                                          |
+| 4    | thermo-automation, jankbot, cloudflared, universe-db                                                                                    |
+| 5    | garage-webui (depends on garage), analytics-service, internet-monitor, clipper-service, and other apps that use the `universe` database |
 
 ## Secrets Architecture
 

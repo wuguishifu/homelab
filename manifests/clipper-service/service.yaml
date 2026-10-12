@@ -1,0 +1,15 @@
+# In-cluster: http://clipper-service.clipper-service.svc.cluster.local. From the tailnet, use the
+# Ingress (https://clipper.wuguishifu.dev).
+apiVersion: v1
+kind: Service
+metadata:
+  name: clipper-service
+  namespace: clipper-service
+spec:
+  selector:
+    app: clipper-service
+  ports:
+    - name: http
+      port: 80
+      targetPort: 3008
+      protocol: TCP
