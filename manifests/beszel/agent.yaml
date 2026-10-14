@@ -1,0 +1,68 @@
+# Collects sol's CPU, memory, disk, network and temperature stats and pushes them to the hub.
+# It runs on the host network so it sees the real NICs rather than the pod's veth. /proc and /sys
+# in a container are already the host's, so CPU, memory, load and sensors need no extra mounts.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: beszel-agent
+  namespace: beszel
+spec:
+  replicas: 1
+  # Two agents sharing the same data dir would register as the same system.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: beszel
+      component: agent
+  template:
+    metadata:
+      labels:
+        app: beszel
+        component: agent
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: sol
+      hostNetwork: true
+      # Resolve the hub's cluster DNS name despite running on the host network.
+      dnsPolicy: ClusterFirstWithHostNet
+      containers:
+        - name: agent
+          image: henrygd/beszel-agent:0.21.0
+          env:
+            - name: HUB_URL
+              value: http://beszel.beszel.svc.cluster.local
+            # WebSocket only, so the agent doesn't open a port on the host.
+            - name: DISABLE_SSH
+              value: "true"
+            # The container's / is an overlay with no block device, so name the root LV's
+            # diskstats entry (/dev/mapper/ubuntu--vg-ubuntu--lv -> dm-0) for disk I/O.
+            - name: FILESYSTEM
+              value: dm-0
+            # The Wi-Fi uplink. tailscale0 traffic also crosses it, so counting both would double
+            # it; flannel, cni0 and the veths are in-cluster traffic. Add enp1s0/enp3s0 if sol
+            # moves to Ethernet.
+            - name: NICS
+              value: wlp2s0
+            # No D-Bus socket in the container.
+            - name: SKIP_SYSTEMD
+              value: "true"
+          # KEY (the hub's public key) and TOKEN; see README.md.
+          envFrom:
+            - secretRef:
+                name: beszel-secrets
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/beszel-agent
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              memory: 128Mi
+      volumes:
+        # Holds the agent's fingerprint, which the hub uses to recognise it across restarts.
+        - name: data
+          hostPath:
+            path: /var/lib/beszel-agent
+            type: DirectoryOrCreate

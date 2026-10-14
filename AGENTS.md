@@ -46,6 +46,7 @@ apps/                        # ArgoCD Application resources (App-of-Apps pattern
       clipper-service.yaml   # universe clipper-service (finds moments in Medal clips with Gemini)
       cloudflared.yaml       # Cloudflare Tunnel connector
       redash.yaml            # Redash at redash.wuguishifu.dev (uses the `redash` database)
+      beszel.yaml            # Beszel resource monitoring for sol at beszel.wuguishifu.dev
 
 manifests/                   # Kubernetes manifests applied by ArgoCD apps
   argocd-config/             # ArgoCD ingress + insecure mode configmap
@@ -60,6 +61,7 @@ manifests/                   # Kubernetes manifests applied by ArgoCD apps
   clipper-service/           # Deployment, Service and tailnet Ingress for clipper-service
   cloudflared/               # Cloudflare Tunnel connector Deployment
   redash/                    # Redash server, scheduler and worker, Service and tailnet Ingress
+  beszel/                    # Beszel hub (UI + metric history) and the agent on sol's host network
   databases-backup/          # Backup CronJobs and config
   universe-db/               # Migration Job for the `universe` database (see its README)
 
@@ -81,7 +83,7 @@ Apps deploy in waves to respect dependencies:
 | 1    | cert-manager-config, coredns-config, postgresql, redis                                                                                  |
 | 2    | argocd-config, infisical, infisical-operator                                                                                            |
 | 3    | infisical-secrets, media-tools                                                                                                          |
-| 4    | thermo-automation, jankbot, cloudflared, universe-db, redash                                                                            |
+| 4    | thermo-automation, jankbot, cloudflared, universe-db, redash, beszel                                                                    |
 | 5    | garage-webui (depends on garage), analytics-service, internet-monitor, clipper-service, and other apps that use the `universe` database |
 
 ## Secrets Architecture

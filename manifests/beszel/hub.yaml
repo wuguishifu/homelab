@@ -1,0 +1,59 @@
+# Web UI, API and metric storage. Agents connect to it over WebSocket, so it never dials out.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: beszel-hub
+  namespace: beszel
+spec:
+  replicas: 1
+  # SQLite on a ReadWriteOnce volume: only one hub at a time.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: beszel
+      component: hub
+  template:
+    metadata:
+      labels:
+        app: beszel
+        component: hub
+    spec:
+      containers:
+        - name: hub
+          image: henrygd/beszel:0.21.0
+          env:
+            - name: APP_URL
+              value: https://beszel.wuguishifu.dev
+            # Agents reach the hub, not the other way round.
+            - name: DISABLE_SSH
+              value: "true"
+          ports:
+            - name: http
+              containerPort: 8090
+          volumeMounts:
+            - name: data
+              mountPath: /beszel_data
+          resources:
+            requests:
+              cpu: 25m
+              memory: 64Mi
+            limits:
+              memory: 256Mi
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 8090
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            timeoutSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 8090
+            initialDelaySeconds: 5
+            periodSeconds: 10
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: beszel-data
