@@ -1,0 +1,26 @@
+# Redash's database/Redis URLs and signing keys; see manifests/redash/README.md.
+apiVersion: secrets.infisical.com/v1alpha1
+kind: InfisicalSecret
+metadata:
+  name: redash-secrets
+  namespace: infisical-operator-system
+spec:
+  hostAPI: https://infisical.wuguishifu.dev/api
+  syncConfig:
+    resyncInterval: 60s
+
+  authentication:
+    universalAuth:
+      credentialsRef:
+        secretName: infisical-machine-identity
+        secretNamespace: infisical-operator-system
+      secretsScope:
+        projectSlug: homelab
+        envSlug: prod
+        secretsPath: /redash
+        recursive: false
+
+  managedSecretReference:
+    secretName: redash-secrets
+    secretNamespace: redash
+    secretType: Opaque

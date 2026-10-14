@@ -1,0 +1,164 @@
+# Non-secret settings. Secrets come from Infisical; see README.md.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: redash-env
+  namespace: redash
+data:
+  REDASH_HOST: https://redash.wuguishifu.dev
+  REDASH_LOG_LEVEL: INFO
+  PYTHONUNBUFFERED: "0"
+  # Gunicorn processes in the server. The default (4) is more than one person needs.
+  REDASH_WEB_WORKERS: "2"
+---
+# Web UI and API. Its init container creates the tables on an empty database and applies any
+# migrations from a newer image, so bumping the tag (on all three Deployments) upgrades the schema.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redash-server
+  namespace: redash
+spec:
+  replicas: 1
+  # Two servers on different images would race on migrations.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: redash
+      component: server
+  template:
+    metadata:
+      labels:
+        app: redash
+        component: server
+    spec:
+      initContainers:
+        - name: migrate
+          image: redash/redash:26.9.0
+          # create_tables only acts on an empty database (and stamps it at the latest migration),
+          # so running both every start is safe.
+          command:
+            - /bin/sh
+            - -c
+            - /app/manage.py database create_tables && /app/manage.py db upgrade
+          envFrom:
+            - secretRef:
+                name: redash-secrets
+            - configMapRef:
+                name: redash-env
+          resources:
+            requests:
+              cpu: 50m
+              memory: 256Mi
+            limits:
+              memory: 512Mi
+      containers:
+        - name: server
+          image: redash/redash:26.9.0
+          args: ["server"]
+          envFrom:
+            - secretRef:
+                name: redash-secrets
+            - configMapRef:
+                name: redash-env
+          ports:
+            - name: http
+              containerPort: 5000
+          resources:
+            requests:
+              cpu: 100m
+              memory: 512Mi
+            limits:
+              memory: 1Gi
+          livenessProbe:
+            httpGet:
+              path: /ping
+              port: 5000
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /ping
+              port: 5000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+---
+# Enqueues scheduled query refreshes and periodic jobs. Must be a single replica.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redash-scheduler
+  namespace: redash
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: redash
+      component: scheduler
+  template:
+    metadata:
+      labels:
+        app: redash
+        component: scheduler
+    spec:
+      containers:
+        - name: scheduler
+          image: redash/redash:26.9.0
+          args: ["scheduler"]
+          envFrom:
+            - secretRef:
+                name: redash-secrets
+            - configMapRef:
+                name: redash-env
+          resources:
+            requests:
+              cpu: 25m
+              memory: 192Mi
+            limits:
+              memory: 512Mi
+---
+# Runs queries and background jobs. Upstream splits the queues across three worker containers;
+# one Deployment serving all of them is plenty here. supervisord restarts a worker that fails its
+# health check, so there's no probe.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redash-worker
+  namespace: redash
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redash
+      component: worker
+  template:
+    metadata:
+      labels:
+        app: redash
+        component: worker
+    spec:
+      containers:
+        - name: worker
+          image: redash/redash:26.9.0
+          args: ["worker"]
+          env:
+            - name: QUEUES
+              value: "queries,scheduled_queries,schemas,periodic,emails,default"
+            - name: WORKERS_COUNT
+              value: "2"
+          envFrom:
+            - secretRef:
+                name: redash-secrets
+            - configMapRef:
+                name: redash-env
+          resources:
+            requests:
+              cpu: 100m
+              memory: 512Mi
+            limits:
+              # Query results are held in memory before they're stored.
+              memory: 2Gi
