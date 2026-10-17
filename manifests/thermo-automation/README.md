@@ -7,8 +7,9 @@ against it, switching thermostats between AUTO and OFF. The same pod serves the 
 updates over Server-Sent Events on `/api/stream`. How the automations decide is in the service's
 README in universe.
 
-It's reachable from the tailnet at `https://thermo.wuguishifu.dev`. The app has no login, so it
-must not get a public route without something like Authelia in front.
+It's reachable from the tailnet at `https://thermo.wuguishifu.dev`, behind Authelia's forward-auth
+(the app has no login of its own; see `manifests/authelia/README.md`). A Cloudflare Tunnel route
+straight to the Service would skip that login, so a public route has to go through Traefik.
 
 Image Updater pins the `thermo-automation-service` image's digest, so publishing a new image
 (merging to universe `main`, or **Deploy Server App** → `projects/thermo-automation/service`)
@@ -25,10 +26,10 @@ Infisical `universe` project, `prod` environment. The app reads the same paths a
 `secretsPaths` in universe (`environment-config.json`), each synced to its own Secret and loaded in
 this order, so a key in a later path wins:
 
-| Path                                  | Secret                               | Keys                                               |
-| ------------------------------------- | ------------------------------------ | -------------------------------------------------- |
-| `/platform/analytics/client`          | `thermo-automation-analytics-client` | `ANALYTICS_SERVICE_API_TOKEN`                      |
-| `/platform/postgres`                  | `thermo-automation-postgres`         | `UNIVERSE_DB_CONNECTION_STRING`                    |
+| Path                                  | Secret                               | Keys                                                 |
+| ------------------------------------- | ------------------------------------ | ---------------------------------------------------- |
+| `/platform/analytics/client`          | `thermo-automation-analytics-client` | `ANALYTICS_SERVICE_API_TOKEN`                        |
+| `/platform/postgres`                  | `thermo-automation-postgres`         | `UNIVERSE_DB_CONNECTION_STRING`                      |
 | `/projects/thermo-automation/service` | `thermo-automation-secrets`          | `DAIKIN_API_KEY`, `DAIKIN_INTEGRATOR_TOKEN`, `EMAIL` |
 
 `EMAIL` is the Daikin account the integrator token was issued for. The ConfigMap in
