@@ -1,3 +1,5 @@
+# Tailnet only, like everything on *.wuguishifu.dev. The app has no login of its own, so it must not
+# get a public route (Cloudflare Tunnel) without something like Authelia in front.
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -21,4 +23,4 @@ spec:
               service:
                 name: thermo-automation
                 port:
-                  number: 3000
+                  number: 80

@@ -1,3 +1,58 @@
+# thermo-automation's secrets, one per Infisical path in the app's secretsPaths
+# (universe projects/thermo-automation/service/environment-config.json). The shared /platform/* groups are synced
+# into this namespace rather than copied into the app's own path; see manifests/thermo-automation/README.md.
+apiVersion: secrets.infisical.com/v1alpha1
+kind: InfisicalSecret
+metadata:
+  name: thermo-automation-analytics-client
+  namespace: infisical-operator-system
+spec:
+  hostAPI: https://infisical.wuguishifu.dev/api
+  syncConfig:
+    resyncInterval: 60s
+
+  authentication:
+    universalAuth:
+      credentialsRef:
+        secretName: infisical-machine-identity
+        secretNamespace: infisical-operator-system
+      secretsScope:
+        projectSlug: universe
+        envSlug: prod
+        secretsPath: /platform/analytics/client
+        recursive: false
+
+  managedSecretReference:
+    secretName: thermo-automation-analytics-client
+    secretNamespace: thermo-automation
+    secretType: Opaque
+---
+apiVersion: secrets.infisical.com/v1alpha1
+kind: InfisicalSecret
+metadata:
+  name: thermo-automation-postgres
+  namespace: infisical-operator-system
+spec:
+  hostAPI: https://infisical.wuguishifu.dev/api
+  syncConfig:
+    resyncInterval: 60s
+
+  authentication:
+    universalAuth:
+      credentialsRef:
+        secretName: infisical-machine-identity
+        secretNamespace: infisical-operator-system
+      secretsScope:
+        projectSlug: universe
+        envSlug: prod
+        secretsPath: /platform/postgres
+        recursive: false
+
+  managedSecretReference:
+    secretName: thermo-automation-postgres
+    secretNamespace: thermo-automation
+    secretType: Opaque
+---
 apiVersion: secrets.infisical.com/v1alpha1
 kind: InfisicalSecret
 metadata:
@@ -14,9 +69,9 @@ spec:
         secretName: infisical-machine-identity
         secretNamespace: infisical-operator-system
       secretsScope:
-        projectSlug: homelab
+        projectSlug: universe
         envSlug: prod
-        secretsPath: /thermo-automation
+        secretsPath: /projects/thermo-automation/service
         recursive: false
 
   managedSecretReference:

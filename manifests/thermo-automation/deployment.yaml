@@ -1,3 +1,18 @@
+# Non-secret settings. Secrets come from Infisical; see README.md. The house, its timezone and the
+# temperature unit are set in the app and kept in the database.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: thermo-automation-env
+  namespace: thermo-automation
+data:
+  # The in-cluster analytics-service, which records every write to a thermostat.
+  ANALYTICS_SERVICE_BASE_URL: "http://analytics-service.analytics-service.svc.cluster.local"
+  # How often it reads the thermostats, records them and runs the automations.
+  TICK_INTERVAL_MINUTES: "3"
+---
+# Reads the house's Daikin thermostats every few minutes, records them in the universe database and
+# runs the automations against them. Also serves the SPA and its live updates (SSE on /api/stream).
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -5,6 +20,9 @@ metadata:
   namespace: thermo-automation
 spec:
   replicas: 1
+  # Two pods at once would both run the automations against the same thermostats.
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: thermo-automation
@@ -13,25 +31,41 @@ spec:
       labels:
         app: thermo-automation
     spec:
-      initContainers:
-        - name: migrate
-          image: ghcr.io/wuguishifu/thermo-automation-migration:latest
-          envFrom:
-            - secretRef:
-                name: thermo-automation-secrets
       containers:
         - name: thermo-automation
-          image: ghcr.io/wuguishifu/thermo-automation:latest
+          image: ghcr.io/wuguishifu/universe/thermo-automation-service:latest
           env:
-            - name: EMAIL
-              value: bramer.bo@gmail.com
-            - name: TIMEZONE
-              value: America/Los_Angeles
-            - name: API_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: thermo-automation-secrets
-                  key: THERMO_AUTOMATION_API_KEY
+            - name: ENVIRONMENT
+              value: production
+          # In secretsPaths order (universe projects/thermo-automation/service/environment-config.json):
+          # a key in a later source wins. The ConfigMap is last, so its settings win over Infisical.
           envFrom:
             - secretRef:
+                name: thermo-automation-analytics-client
+            - secretRef:
+                name: thermo-automation-postgres
+            - secretRef:
                 name: thermo-automation-secrets
+            - configMapRef:
+                name: thermo-automation-env
+          ports:
+            - name: http
+              containerPort: 3009
+          resources:
+            requests:
+              cpu: 20m
+              memory: 96Mi
+            limits:
+              memory: 256Mi
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 3009
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 3009
+            initialDelaySeconds: 5
+            periodSeconds: 10

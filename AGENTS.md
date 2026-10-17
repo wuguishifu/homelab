@@ -38,7 +38,7 @@ apps/                        # ArgoCD Application resources (App-of-Apps pattern
       argocd-config.yaml
       coredns-config.yaml
     homelab/
-      thermo-automation.yaml # Daikin thermostat automation service
+      thermo-automation.yaml # universe thermo-automation-service (Daikin thermostats; uses the `universe` database)
       jankbot.yaml           # jankbot Discord bot (core, stitcher, and one gateway per voice bot)
       media-tools.yaml       # ffmpeg/ffprobe/yt-dlp in /opt/media-tools on sol, for other apps to mount
       analytics-service.yaml # universe analytics-service (uses the `universe` database)
@@ -53,7 +53,7 @@ manifests/                   # Kubernetes manifests applied by ArgoCD apps
   coredns-config/            # coredns-custom: in-cluster rewrites for *.wuguishifu.dev names (redis, postgres)
   cert-manager-config/       # ClusterIssuer (letsencrypt-prod, Cloudflare DNS-01)
   infisical-secrets/         # InfisicalSecret CRDs — one file per secret group
-  thermo-automation/         # Deployment for thermo-automation
+  thermo-automation/         # Deployment, Service and tailnet Ingress for thermo-automation
   jankbot/                   # jankbot-core, jankbot-stitcher and the jankbot-gateway Deployments
   media-tools/               # media-tools Deployment (hostPath /opt/media-tools) and how to mount it
   analytics-service/         # Deployment + in-cluster Service for analytics-service
@@ -77,14 +77,14 @@ minute and applies it, the same GitOps model as ArgoCD. See `hosts/mini/README.m
 
 Apps deploy in waves to respect dependencies:
 
-| Wave | Apps                                                                                                                                    |
-| ---- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| 0    | cert-manager                                                                                                                            |
-| 1    | cert-manager-config, coredns-config, postgresql, redis                                                                                  |
-| 2    | argocd-config, infisical, infisical-operator                                                                                            |
-| 3    | infisical-secrets, media-tools                                                                                                          |
-| 4    | thermo-automation, jankbot, cloudflared, universe-db, redash, beszel                                                                    |
-| 5    | garage-webui (depends on garage), analytics-service, internet-monitor, clipper-service, and other apps that use the `universe` database |
+| Wave | Apps                                                                                                                                                       |
+| ---- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 0    | cert-manager                                                                                                                                               |
+| 1    | cert-manager-config, coredns-config, postgresql, redis                                                                                                     |
+| 2    | argocd-config, infisical, infisical-operator                                                                                                               |
+| 3    | infisical-secrets, media-tools                                                                                                                             |
+| 4    | jankbot, cloudflared, universe-db, redash, beszel                                                                                                          |
+| 5    | garage-webui (depends on garage), analytics-service, internet-monitor, clipper-service, thermo-automation, and other apps that use the `universe` database |
 
 ## Secrets Architecture
 

@@ -6,7 +6,12 @@ metadata:
   labels:
     group: homelab
   annotations:
-    argocd.argoproj.io/sync-wave: "4"
+    # After universe-db's migrations (wave 4), since its tables are in the `universe` database.
+    argocd.argoproj.io/sync-wave: "5"
+    argocd-image-updater.argoproj.io/image-list: "service=ghcr.io/wuguishifu/universe/thermo-automation-service:latest"
+    argocd-image-updater.argoproj.io/service.update-strategy: digest
+    argocd-image-updater.argoproj.io/write-back-method: git:secret:argocd/argocd-image-updater-secret
+    argocd-image-updater.argoproj.io/git-branch: main
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
