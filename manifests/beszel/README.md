@@ -27,7 +27,7 @@ provider is configured in the PocketBase admin UI and stored on the PVC, not in 
 
 1. Open `https://beszel.wuguishifu.dev/_/#/settings` and turn off **Hide collection create and edit
    controls**.
-2. Edit the `users` collection. Under **Options → OAuth2**, enable it, then \*\*Add provider → OIDC (OIDC1):
+2. Edit the `users` collection. Under **Options → OAuth2**, enable it, then **Add provider → OIDC (OIDC1)**:
    - Client ID: `beszel`
    - Client secret: the `Random Password` that goes with `BESZEL_CLIENT_SECRET_DIGEST` (see
      `manifests/authelia/README.md`). Nothing else needs it, so it isn't stored anywhere else. If
