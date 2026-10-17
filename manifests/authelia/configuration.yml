@@ -1,0 +1,118 @@
+# Authelia's configuration, built into the authelia-config ConfigMap by kustomization.yaml (the
+# name gets a content hash, so a change here rolls the pod). Nothing here is secret: secrets come from
+# /secrets (the authelia-secrets Secret), either through the *_FILE env vars in deployment.yaml or the
+# `secret` template calls below (X_AUTHELIA_CONFIG_FILTERS=template), which cover the list items env
+# vars can't reach.
+theme: auto
+
+server:
+  address: tcp://:9091/
+
+log:
+  level: info
+
+totp:
+  issuer: wuguishifu.dev
+
+webauthn:
+  display_name: wuguishifu.dev
+  # A passkey stands in for the username and password. Clients that need two factors (all of
+  # them, below) then also ask for the password.
+  enable_passkey_login: true
+
+# Users live in a file rather than LDAP, so there is nowhere to write a new password: changes
+# are made by editing USERS_DATABASE in Infisical (see README.md).
+authentication_backend:
+  password_reset:
+    disable: true
+  password_change:
+    disable: true
+  file:
+    path: /secrets/USERS_DATABASE
+    watch: false
+
+# Forward-auth only (OIDC clients have their own authorization_policy), so this applies just to
+# Ingresses that use the authelia-forwardauth middleware: they need two factors unless a rule here
+# says otherwise.
+access_control:
+  default_policy: two_factor
+
+session:
+  cookies:
+    - domain: wuguishifu.dev
+      authelia_url: https://auth.wuguishifu.dev
+  # Sessions survive Authelia restarts. Redis DB 2 (Infisical uses 0, Redash 1).
+  redis:
+    host: redis-master.databases.svc.cluster.local
+    port: 6379
+    database_index: 2
+
+regulation:
+  max_retries: 5
+  find_time: 2 minutes
+  ban_time: 10 minutes
+
+storage:
+  postgres:
+    address: tcp://postgresql.databases.svc.cluster.local:5432
+    database: authelia
+    username: authelia
+
+# One-time codes for registering a passkey or TOTP device are written here rather than emailed:
+# kubectl -n authelia exec deploy/authelia -- cat /data/notification.txt
+notifier:
+  filesystem:
+    filename: /data/notification.txt
+
+identity_providers:
+  oidc:
+    jwks:
+      - key_id: main
+        algorithm: RS256
+        use: sig
+        key: {{ secret "/secrets/OIDC_JWKS_KEY" | mindent 10 "|" | msquote }}
+    clients:
+      - client_id: argocd
+        client_name: Argo CD
+        client_secret: {{ secret "/secrets/ARGOCD_CLIENT_SECRET_DIGEST" | msquote }}
+        public: false
+        authorization_policy: two_factor
+        require_pkce: false
+        redirect_uris:
+          - https://argocd.wuguishifu.dev/auth/callback
+        scopes: [openid, groups, email, profile]
+        response_types: [code]
+        grant_types: [authorization_code]
+        access_token_signed_response_alg: none
+        userinfo_signed_response_alg: none
+        token_endpoint_auth_method: client_secret_basic
+      # `argocd login argocd.wuguishifu.dev --sso`
+      - client_id: argocd-cli
+        client_name: Argo CD (CLI)
+        public: true
+        authorization_policy: two_factor
+        require_pkce: true
+        pkce_challenge_method: S256
+        redirect_uris:
+          - http://localhost:8085/auth/callback
+        scopes: [openid, offline_access, groups, email, profile]
+        response_types: [code]
+        grant_types: [authorization_code, refresh_token]
+        access_token_signed_response_alg: none
+        userinfo_signed_response_alg: none
+        token_endpoint_auth_method: none
+      - client_id: beszel
+        client_name: Beszel
+        client_secret: {{ secret "/secrets/BESZEL_CLIENT_SECRET_DIGEST" | msquote }}
+        public: false
+        authorization_policy: two_factor
+        require_pkce: true
+        pkce_challenge_method: S256
+        redirect_uris:
+          - https://beszel.wuguishifu.dev/api/oauth2-redirect
+        scopes: [openid, email, profile]
+        response_types: [code]
+        grant_types: [authorization_code]
+        access_token_signed_response_alg: none
+        userinfo_signed_response_alg: none
+        token_endpoint_auth_method: client_secret_basic

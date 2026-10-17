@@ -20,6 +20,30 @@ To upgrade, bump the image tag in `hub.yaml` and `agent.yaml` together.
 4. Add both to Infisical (below). Within a minute the operator syncs `beszel-secrets`, the agent
    starts and `sol` turns green in the hub.
 
+## Single sign-on
+
+Beszel logs in through Authelia (the `beszel` client in `manifests/authelia/configuration.yml`). The
+provider is configured in the PocketBase admin UI and stored on the PVC, not in this repo:
+
+1. Open `https://beszel.wuguishifu.dev/_/#/settings` and turn off **Hide collection create and edit
+   controls**.
+2. Edit the `users` collection. Under **Options → OAuth2**, enable it, then **Add provider → OpenID
+   Connect**:
+   - Client ID: `beszel`
+   - Client secret: the `Random Password` that goes with `BESZEL_CLIENT_SECRET_DIGEST` (see
+     `manifests/authelia/README.md`). Nothing else needs it, so it isn't stored anywhere else. If
+     it's lost, generate a new pair.
+   - Display name: `Authelia`
+   - Auth URL: `https://auth.wuguishifu.dev/api/oidc/authorization`
+   - Token URL: `https://auth.wuguishifu.dev/api/oidc/token`
+   - Fetch user info from **User info URL**: `https://auth.wuguishifu.dev/api/oidc/userinfo`
+3. Save, and turn **Hide collection create and edit controls** back on.
+
+Beszel doesn't create users on OAuth login (`USER_CREATION` is unset), so the Authelia user's email
+has to match an existing Beszel account. Once SSO works, password login can be switched off with
+`DISABLE_PASSWORD_AUTH=true` on the hub. Do that in `hub.yaml`, not in PocketBase, because the env
+var wins on restart.
+
 ## Secrets
 
 Infisical `homelab` project, `prod` environment, `/beszel` (→ `beszel-secrets`):

@@ -4,14 +4,15 @@ This repo is a GitOps homelab running on a single server, `sol`. ArgoCD runs on 
 
 ## Stack
 
-| Component                  | Role                                                          |
-| -------------------------- | ------------------------------------------------------------- |
-| k3s                        | Lightweight single-node Kubernetes                            |
-| Traefik                    | Ingress controller (bundled with k3s)                         |
-| cert-manager               | Automatic TLS via Let's Encrypt (Cloudflare DNS-01 challenge) |
-| ArgoCD                     | GitOps — watches this repo, syncs everything                  |
-| Infisical                  | Self-hosted secrets manager                                   |
-| Infisical secrets-operator | Syncs secrets from Infisical → Kubernetes `Secret` objects    |
+| Component                  | Role                                                                 |
+| -------------------------- | -------------------------------------------------------------------- |
+| k3s                        | Lightweight single-node Kubernetes                                   |
+| Traefik                    | Ingress controller (bundled with k3s)                                |
+| cert-manager               | Automatic TLS via Let's Encrypt (Cloudflare DNS-01 challenge)        |
+| ArgoCD                     | GitOps — watches this repo, syncs everything                         |
+| Infisical                  | Self-hosted secrets manager                                          |
+| Infisical secrets-operator | Syncs secrets from Infisical → Kubernetes `Secret` objects           |
+| Authelia                   | SSO: OIDC provider and Traefik forward-auth at `auth.wuguishifu.dev` |
 
 The server is reachable over Tailscale only — no inbound ports are open. DNS for `wuguishifu.dev` is managed by Cloudflare with a wildcard A record pointing to the server's Tailscale IP (DNS only, not proxied). Nothing is currently public. A `cloudflared` Deployment in the cluster runs a Cloudflare Tunnel (an outbound connection to Cloudflare's edge) for exposing an app publicly: a tunnel public hostname gets a proxied CNAME that overrides the wildcard, and routes straight to the app's Service (bypassing Traefik). The tunnel is token-managed, so its routes live in the Cloudflare dashboard, not this repo.
 
@@ -37,6 +38,7 @@ apps/                        # ArgoCD Application resources (App-of-Apps pattern
     system/
       argocd-config.yaml
       coredns-config.yaml
+      authelia.yaml          # SSO at auth.wuguishifu.dev (uses the `authelia` database)
     homelab/
       thermo-automation.yaml # universe thermo-automation-service (Daikin thermostats; uses the `universe` database)
       jankbot.yaml           # jankbot Discord bot (core, stitcher, and one gateway per voice bot)
@@ -49,8 +51,9 @@ apps/                        # ArgoCD Application resources (App-of-Apps pattern
       beszel.yaml            # Beszel resource monitoring for sol at beszel.wuguishifu.dev
 
 manifests/                   # Kubernetes manifests applied by ArgoCD apps
-  argocd-config/             # ArgoCD ingress + insecure mode configmap
-  coredns-config/            # coredns-custom: in-cluster rewrites for *.wuguishifu.dev names (redis, postgres)
+  argocd-config/             # ArgoCD ingress, insecure mode, and SSO (argocd-cm, argocd-rbac-cm)
+  coredns-config/            # coredns-custom: in-cluster rewrites for *.wuguishifu.dev names (redis, postgres, auth)
+  authelia/                  # Authelia config, Deployment, tailnet Ingress and the forward-auth Middleware
   cert-manager-config/       # ClusterIssuer (letsencrypt-prod, Cloudflare DNS-01)
   infisical-secrets/         # InfisicalSecret CRDs — one file per secret group
   thermo-automation/         # Deployment, Service and tailnet Ingress for thermo-automation
@@ -83,7 +86,7 @@ Apps deploy in waves to respect dependencies:
 | 1    | cert-manager-config, coredns-config, postgresql, redis                                                                                                     |
 | 2    | argocd-config, infisical, infisical-operator                                                                                                               |
 | 3    | infisical-secrets, media-tools                                                                                                                             |
-| 4    | jankbot, cloudflared, universe-db, redash, beszel                                                                                                          |
+| 4    | jankbot, cloudflared, universe-db, redash, beszel, authelia                                                                                                |
 | 5    | garage-webui (depends on garage), analytics-service, internet-monitor, clipper-service, thermo-automation, and other apps that use the `universe` database |
 
 ## Secrets Architecture

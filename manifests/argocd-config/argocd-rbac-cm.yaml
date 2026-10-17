@@ -1,0 +1,13 @@
+# SSO users get nothing unless a group below grants it. `admins` is the Authelia group (in
+# USERS_DATABASE, see manifests/authelia/README.md). The local admin account is unaffected.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-rbac-cm
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: argocd-rbac-cm
+    app.kubernetes.io/part-of: argocd
+data:
+  policy.csv: |
+    g, admins, role:admin

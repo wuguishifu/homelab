@@ -1,0 +1,27 @@
+# Authelia's signing keys, users file, OIDC client digests and database/Redis passwords; see
+# manifests/authelia/README.md.
+apiVersion: secrets.infisical.com/v1alpha1
+kind: InfisicalSecret
+metadata:
+  name: authelia-secrets
+  namespace: infisical-operator-system
+spec:
+  hostAPI: https://infisical.wuguishifu.dev/api
+  syncConfig:
+    resyncInterval: 60s
+
+  authentication:
+    universalAuth:
+      credentialsRef:
+        secretName: infisical-machine-identity
+        secretNamespace: infisical-operator-system
+      secretsScope:
+        projectSlug: homelab
+        envSlug: prod
+        secretsPath: /authelia
+        recursive: false
+
+  managedSecretReference:
+    secretName: authelia-secrets
+    secretNamespace: authelia
+    secretType: Opaque

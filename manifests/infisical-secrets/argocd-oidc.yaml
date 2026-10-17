@@ -1,0 +1,31 @@
+# ArgoCD's Authelia client secret (the plaintext of ARGOCD_CLIENT_SECRET_DIGEST in /authelia),
+# read by oidc.config in manifests/argocd-config/argocd-cm.yaml. ArgoCD only resolves
+# $secret:key references to Secrets labelled part-of: argocd; the operator copies this
+# resource's labels onto the Secret it creates.
+apiVersion: secrets.infisical.com/v1alpha1
+kind: InfisicalSecret
+metadata:
+  name: argocd-oidc
+  namespace: infisical-operator-system
+  labels:
+    app.kubernetes.io/part-of: argocd
+spec:
+  hostAPI: https://infisical.wuguishifu.dev/api
+  syncConfig:
+    resyncInterval: 60s
+
+  authentication:
+    universalAuth:
+      credentialsRef:
+        secretName: infisical-machine-identity
+        secretNamespace: infisical-operator-system
+      secretsScope:
+        projectSlug: homelab
+        envSlug: prod
+        secretsPath: /argocd/oidc
+        recursive: false
+
+  managedSecretReference:
+    secretName: argocd-oidc
+    secretNamespace: argocd
+    secretType: Opaque

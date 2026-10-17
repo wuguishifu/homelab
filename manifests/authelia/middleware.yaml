@@ -1,0 +1,19 @@
+# Puts an app behind Authelia's login without the app knowing about it. Add to an Ingress in any
+# namespace with
+#   traefik.ingress.kubernetes.io/router.middlewares: authelia-forwardauth@kubernetescrd
+# It then needs a two-factor login (access_control in configuration.yml).
+# The Remote-* headers carry the logged-in user to apps that accept a trusted header.
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: forwardauth
+  namespace: authelia
+spec:
+  forwardAuth:
+    address: http://authelia.authelia.svc.cluster.local/api/authz/forward-auth
+    trustForwardHeader: true
+    authResponseHeaders:
+      - Remote-User
+      - Remote-Groups
+      - Remote-Email
+      - Remote-Name

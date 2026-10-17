@@ -1,0 +1,83 @@
+# State lives in the `authelia` database (passkeys, TOTP, OIDC consents) and Redis (sessions), so
+# the pod itself is disposable.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: authelia
+  namespace: authelia
+  annotations:
+    # The Infisical operator restarts the pod when authelia-secrets changes (e.g. a new user).
+    secrets.infisical.com/auto-reload: "true"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: authelia
+  template:
+    metadata:
+      labels:
+        app: authelia
+    spec:
+      # Otherwise Kubernetes injects AUTHELIA_SERVICE_HOST etc. for the `authelia` Service, which
+      # Authelia reads as (unknown) config keys and refuses to start.
+      enableServiceLinks: false
+      containers:
+        - name: authelia
+          image: authelia/authelia:4.39.28
+          env:
+            - name: X_AUTHELIA_CONFIG
+              value: /etc/authelia/configuration.yml
+            - name: X_AUTHELIA_CONFIG_FILTERS
+              value: template
+            - name: AUTHELIA_SESSION_SECRET_FILE
+              value: /secrets/SESSION_SECRET
+            - name: AUTHELIA_SESSION_REDIS_PASSWORD_FILE
+              value: /secrets/REDIS_PASSWORD
+            - name: AUTHELIA_STORAGE_ENCRYPTION_KEY_FILE
+              value: /secrets/STORAGE_ENCRYPTION_KEY
+            - name: AUTHELIA_STORAGE_POSTGRES_PASSWORD_FILE
+              value: /secrets/STORAGE_POSTGRES_PASSWORD
+            - name: AUTHELIA_IDENTITY_PROVIDERS_OIDC_HMAC_SECRET_FILE
+              value: /secrets/OIDC_HMAC_SECRET
+          ports:
+            - name: http
+              containerPort: 9091
+          volumeMounts:
+            # Not /config: the entrypoint tries to chown that, and a ConfigMap mount is read-only.
+            - name: config
+              mountPath: /etc/authelia
+              readOnly: true
+            - name: secrets
+              mountPath: /secrets
+              readOnly: true
+            - name: data
+              mountPath: /data
+          resources:
+            requests:
+              cpu: 25m
+              memory: 64Mi
+            limits:
+              memory: 256Mi
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 9091
+            initialDelaySeconds: 15
+            periodSeconds: 30
+            timeoutSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 9091
+            initialDelaySeconds: 5
+            periodSeconds: 10
+      volumes:
+        - name: config
+          configMap:
+            name: authelia-config
+        - name: secrets
+          secret:
+            secretName: authelia-secrets
+        # Holds notification.txt only.
+        - name: data
+          emptyDir: {}
