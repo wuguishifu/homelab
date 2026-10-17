@@ -5,6 +5,8 @@ metadata:
   namespace: redash
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-prod
+    # Authelia login in front (manifests/authelia/middleware.yaml); see REDASH_REMOTE_USER_*.
+    traefik.ingress.kubernetes.io/router.middlewares: authelia-forwardauth@kubernetescrd
 spec:
   ingressClassName: traefik
   tls:

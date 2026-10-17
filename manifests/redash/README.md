@@ -32,18 +32,30 @@ holds user accounts and API keys, so it goes in the encrypted set.
 
 Infisical `homelab` project, `prod` environment, `/redash` (→ `redash-secrets`):
 
-| Key                     | Description                                                                         |
-| ----------------------- | ----------------------------------------------------------------------------------- |
-| `REDASH_DATABASE_URL`   | `postgresql://redash:<password>@postgresql.databases.svc.cluster.local:5432/redash` |
-| `REDASH_REDIS_URL`      | `redis://:<REDIS_PASSWORD>@redis-master.databases.svc.cluster.local:6379/1`         |
-| `REDASH_COOKIE_SECRET`  | Signs session cookies (`openssl rand -hex 32`)                                      |
-| `REDASH_SECRET_KEY`     | Encrypts data source credentials (`openssl rand -hex 32`). Never change it once set |
+| Key                    | Description                                                                         |
+| ---------------------- | ----------------------------------------------------------------------------------- |
+| `REDASH_DATABASE_URL`  | `postgresql://redash:<password>@postgresql.databases.svc.cluster.local:5432/redash` |
+| `REDASH_REDIS_URL`     | `redis://:<REDIS_PASSWORD>@redis-master.databases.svc.cluster.local:6379/1`         |
+| `REDASH_COOKIE_SECRET` | Signs session cookies (`openssl rand -hex 32`)                                      |
+| `REDASH_SECRET_KEY`    | Encrypts data source credentials (`openssl rand -hex 32`). Never change it once set |
 
 `REDIS_PASSWORD` is the one in `database-credentials`.
 
 To send email (invites, alerts, password resets), also add `REDASH_MAIL_SERVER`, `REDASH_MAIL_PORT`,
 `REDASH_MAIL_USE_TLS`, `REDASH_MAIL_USERNAME`, `REDASH_MAIL_PASSWORD` and
 `REDASH_MAIL_DEFAULT_SENDER`.
+
+## Login
+
+Authelia's forward-auth sits in front of the Ingress, and Redash logs you in as the `Remote-Email`
+header it sets (`REDASH_REMOTE_USER_*` in `deployment.yaml`). A matching email logs in as that user
+and keeps its groups. A new email gets a user in the `default` group. Redash sets the display name to
+the email on each login.
+
+Until password login is off, the login page shows a link to remote-user login rather than using
+it. Turn password login off in **Settings → General** for a seamless login.
+Anything that calls the API with a key (scripts, shared dashboard links) also has to pass Authelia
+now.
 
 ## Data sources
 

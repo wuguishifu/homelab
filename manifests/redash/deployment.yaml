@@ -10,6 +10,11 @@ data:
   PYTHONUNBUFFERED: "0"
   # Gunicorn processes in the server. The default (4) is more than one person needs.
   REDASH_WEB_WORKERS: "2"
+  # Log in as whoever Authelia's forward-auth (on the Ingress) says you are. Redash matches the
+  # email to an existing user, or creates one in the default group. Traefik overwrites the header on
+  # every request, but anything that reaches the Service directly could set it, so keep it in-cluster.
+  REDASH_REMOTE_USER_LOGIN_ENABLED: "true"
+  REDASH_REMOTE_USER_HEADER: Remote-Email
 ---
 # Web UI and API. Its init container creates the tables on an empty database and applies any
 # migrations from a newer image, so bumping the tag (on all three Deployments) upgrades the schema.

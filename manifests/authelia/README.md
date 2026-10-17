@@ -1,8 +1,9 @@
 # Authelia
 
 Single sign-on at `https://auth.wuguishifu.dev` (tailnet only, like everything on `*.wuguishifu.dev`).
-It is an OpenID Connect provider for apps that support OIDC (ArgoCD, Beszel) and a Traefik
-forward-auth endpoint for apps that have no login of their own.
+It is an OpenID Connect provider for apps that support OIDC (ArgoCD, Beszel, pgAdmin) and a Traefik
+forward-auth endpoint in front of apps that don't: RedisInsight and Garage WebUI (no login of their
+own), and Redash (which takes the user from the `Remote-Email` header).
 
 One stateless Deployment. Users are a YAML file in Infisical (no admin UI). Passkeys, TOTP devices
 and OIDC consents live in the `authelia` database on the shared PostgreSQL. Sessions live in Redis DB 2
@@ -12,7 +13,7 @@ with a content hash, so editing it restarts the pod.
 To upgrade, bump the image tag in `deployment.yaml`. The schema migrates on start.
 
 Vaultwarden is deliberately left out: if Authelia breaks, the password manager has to still work.
-ArgoCD and Beszel keep their local admin logins as a fallback.
+ArgoCD, Beszel and pgAdmin keep their local admin logins as a fallback.
 
 ## Setup
 
@@ -48,17 +49,18 @@ ArgoCD and Beszel keep their local admin logins as a fallback.
 Infisical `homelab` project, `prod` environment, `/authelia` (→ `authelia-secrets`, mounted at
 `/secrets`):
 
-| Key                           | Description                                                                                                                                                              |
-| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `SESSION_SECRET`              | `authelia crypto rand --length 64 --charset alphanumeric`                                                                                                                |
-| `STORAGE_ENCRYPTION_KEY`      | Same command. Encrypts the 2FA data in the database. Never change it once set                                                                                            |
-| `OIDC_HMAC_SECRET`            | Same command                                                                                                                                                             |
-| `OIDC_JWKS_KEY`               | Signs ID tokens. `authelia crypto pair rsa generate --bits 2048 --directory /keys`, then paste `private.pem`                                                             |
-| `STORAGE_POSTGRES_PASSWORD`   | The `authelia` role's password from step 1                                                                                                                               |
-| `REDIS_PASSWORD`              | `REDIS_PASSWORD` from `database-credentials`                                                                                                                             |
-| `USERS_DATABASE`              | The users file (below)                                                                                                                                                   |
-| `ARGOCD_CLIENT_SECRET_DIGEST` | `Digest` from `authelia crypto hash generate pbkdf2 --variant sha512 --random --random.length 72 --random.charset rfc3986`. The `Random Password` goes to `/argocd/oidc` |
-| `BESZEL_CLIENT_SECRET_DIGEST` | `Digest` from the same command. The `Random Password` goes into Beszel (see `manifests/beszel/README.md`)                                                                |
+| Key                            | Description                                                                                                                                                              |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `SESSION_SECRET`               | `authelia crypto rand --length 64 --charset alphanumeric`                                                                                                                |
+| `STORAGE_ENCRYPTION_KEY`       | Same command. Encrypts the 2FA data in the database. Never change it once set                                                                                            |
+| `OIDC_HMAC_SECRET`             | Same command                                                                                                                                                             |
+| `OIDC_JWKS_KEY`                | Signs ID tokens. `authelia crypto pair rsa generate --bits 2048 --directory /keys`, then paste `private.pem`                                                             |
+| `STORAGE_POSTGRES_PASSWORD`    | The `authelia` role's password from step 1                                                                                                                               |
+| `REDIS_PASSWORD`               | `REDIS_PASSWORD` from `database-credentials`                                                                                                                             |
+| `USERS_DATABASE`               | The users file (below)                                                                                                                                                   |
+| `ARGOCD_CLIENT_SECRET_DIGEST`  | `Digest` from `authelia crypto hash generate pbkdf2 --variant sha512 --random --random.length 72 --random.charset rfc3986`. The `Random Password` goes to `/argocd/oidc` |
+| `BESZEL_CLIENT_SECRET_DIGEST`  | `Digest` from the same command. The `Random Password` goes into Beszel (see `manifests/beszel/README.md`)                                                                |
+| `PGADMIN_CLIENT_SECRET_DIGEST` | `Digest` from the same command. The `Random Password` goes to `/pgadmin` as `PGADMIN_OIDC_CLIENT_SECRET`                                                                 |
 
 Infisical `/argocd/oidc` (→ `argocd-oidc` in `argocd`):
 

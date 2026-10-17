@@ -20,9 +20,43 @@ spec:
         fullnameOverride: pgadmin
         env:
           email: bramer.bo@gmail.com
+          # Log in through Authelia (the `pgadmin` client in manifests/authelia/configuration.yml).
+          # The local account above stays as a fallback. pgAdmin's entrypoint writes PGADMIN_CONFIG_*
+          # values into its config as Python.
+          variables:
+            - name: PGADMIN_CONFIG_AUTHENTICATION_SOURCES
+              value: "['oauth2', 'internal']"
+            - name: PGADMIN_CONFIG_OAUTH2_AUTO_CREATE_USER
+              value: "True"
         existingSecret: pgadmin-secrets
         secretKeys:
           pgadminPasswordKey: PGADMIN_DEFAULT_PASSWORD
+        envVarsExtra:
+          # Optional so a missing key leaves pgAdmin up with password login only.
+          - name: PGADMIN_OIDC_CLIENT_SECRET
+            valueFrom:
+              secretKeyRef:
+                name: pgadmin-secrets
+                key: PGADMIN_OIDC_CLIENT_SECRET
+                optional: true
+          # $(PGADMIN_OIDC_CLIENT_SECRET) is expanded by Kubernetes, so it must come after the above.
+          - name: PGADMIN_CONFIG_OAUTH2_CONFIG
+            value: >-
+              [{'OAUTH2_NAME': 'authelia',
+              'OAUTH2_DISPLAY_NAME': 'Authelia',
+              'OAUTH2_CLIENT_ID': 'pgadmin',
+              'OAUTH2_CLIENT_SECRET': '$(PGADMIN_OIDC_CLIENT_SECRET)',
+              'OAUTH2_API_BASE_URL': 'https://auth.wuguishifu.dev',
+              'OAUTH2_AUTHORIZATION_URL': 'https://auth.wuguishifu.dev/api/oidc/authorization',
+              'OAUTH2_TOKEN_URL': 'https://auth.wuguishifu.dev/api/oidc/token',
+              'OAUTH2_USERINFO_ENDPOINT': 'https://auth.wuguishifu.dev/api/oidc/userinfo',
+              'OAUTH2_SERVER_METADATA_URL': 'https://auth.wuguishifu.dev/.well-known/openid-configuration',
+              'OAUTH2_SCOPE': 'openid email profile',
+              'OAUTH2_USERNAME_CLAIM': 'email',
+              'OAUTH2_ICON': 'fa-openid',
+              'OAUTH2_BUTTON_COLOR': '#3c70e0',
+              'OAUTH2_CHALLENGE_METHOD': 'S256',
+              'OAUTH2_RESPONSE_TYPE': 'code'}]
         persistentVolume:
           enabled: true
           size: 2Gi
