@@ -1,5 +1,5 @@
 kustomize:
   images:
-  - ghcr.io/wuguishifu/universe/jankbot-core@sha256:4b958189d2ff4ca5c131cbab7a67456406947938d551f493b3203f12a2a0cc41
-  - ghcr.io/wuguishifu/universe/jankbot-gateway@sha256:4bac54b180fac8aad0b61c5e513bb3fe73c9c5476705490eb273f01c434538a5
-  - ghcr.io/wuguishifu/universe/jankbot-stitcher@sha256:0c2960ff03f3c787f9018387c4d70dfe9fee1336d3a39d7d3f09414d62e74a07
+  - ghcr.io/wuguishifu/universe/jankbot-core@sha256:9590f4fc8b49bbd7981816d2b49e44a45ae57baffd54e071044cf1ebdd2d0ee3
+  - ghcr.io/wuguishifu/universe/jankbot-gateway@sha256:f1a1a21cf5abe284eab8bf35196a6f562fd57365fdc7501097295d400e6bd23f
+  - ghcr.io/wuguishifu/universe/jankbot-stitcher@sha256:d6dad5d12aae55fe8efe0fe6f3b89bd7bcfdd0a24e7d04cc2bdb12cf217c2f94
