@@ -8,13 +8,7 @@ This in-cluster instance is the **dev** object store, hence the `-dev` hostnames
 
 [garage-webui](https://github.com/khairul169/garage-webui) runs in the same namespace at `https://garage-dev.wuguishifu.dev`. It talks to the Garage admin API in-cluster (`http://garage:3903`) using `GARAGE_ADMIN_TOKEN`, and covers cluster/layout status, buckets, the object browser, and access keys.
 
-Login is a single username/password pair from `WEBUI_AUTH_USER_PASS` in the `/garage` Infisical path, in `username:bcrypt_hash` form. Generate a new one with:
-
-```sh
-htpasswd -nbBC 10 <username> <password>
-```
-
-Sessions are stored in-memory, so the Deployment stays at one replica — restarting the pod logs you out.
+Login is through Authelia (forward-auth on the Ingress; see `manifests/authelia/README.md`), so the UI's own login is turned off. `WEBUI_AUTH_USER_PASS` in the `/garage` Infisical path is no longer read and can be deleted.
 
 ## CLI
 

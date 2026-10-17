@@ -28,11 +28,7 @@ spec:
                 secretKeyRef:
                   name: garage-secrets
                   key: GARAGE_ADMIN_TOKEN
-            - name: AUTH_USER_PASS
-              valueFrom:
-                secretKeyRef:
-                  name: garage-secrets
-                  key: WEBUI_AUTH_USER_PASS
+            # No AUTH_USER_PASS: Authelia's forward-auth on the Ingress is the login.
           ports:
             - containerPort: 3909
           volumeMounts:

@@ -5,6 +5,8 @@ metadata:
   namespace: databases
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-prod
+    # Authelia login in front (manifests/authelia/middleware.yaml).
+    traefik.ingress.kubernetes.io/router.middlewares: authelia-forwardauth@kubernetescrd
 spec:
   ingressClassName: traefik
   tls:
