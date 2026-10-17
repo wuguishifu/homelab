@@ -14,7 +14,7 @@ data:
   AWS_DEFAULT_REGION: "auto"
 
   # Sensitive databases — encrypted before upload, stored in the secrets bucket
-  SENSITIVE_DATABASES: "infisicalDB vaultwarden"
+  SENSITIVE_DATABASES: "infisicalDB vaultwarden authelia"
   SECRETS_R2_BUCKET: "secrets"
 
   dump.sh: |
