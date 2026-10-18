@@ -1,9 +1,10 @@
 # Authelia
 
 Single sign-on at `https://auth.wuguishifu.dev` (tailnet only, like everything on `*.wuguishifu.dev`).
-It is an OpenID Connect provider for apps that support OIDC (ArgoCD, Beszel, pgAdmin) and a Traefik
-forward-auth endpoint in front of apps that don't: RedisInsight, Garage WebUI, thermo-automation and
-backup-manager (no login of their own), and Redash (which takes the user from the `Remote-Email` header).
+It is an OpenID Connect provider for apps that support OIDC (ArgoCD, Beszel, pgAdmin, Forgejo) and a
+Traefik forward-auth endpoint in front of apps that don't: RedisInsight, Garage WebUI, thermo-automation
+and backup-manager (no login of their own), Redash (which takes the user from the `Remote-Email`
+header), and Gogs until it's removed (in front of its own login).
 
 One stateless Deployment. Users are a YAML file in Infisical (no admin UI). Passkeys, TOTP devices
 and OIDC consents live in the `authelia` database on the shared PostgreSQL. Sessions live in Redis DB 2
@@ -13,7 +14,7 @@ with a content hash, so editing it restarts the pod.
 To upgrade, bump the image tag in `deployment.yaml`. The schema migrates on start.
 
 Vaultwarden is deliberately left out: if Authelia breaks, the password manager has to still work.
-ArgoCD, Beszel and pgAdmin keep their local admin logins as a fallback.
+ArgoCD, Beszel, pgAdmin and Forgejo keep their local admin logins as a fallback.
 
 ## Setup
 
@@ -61,6 +62,7 @@ Infisical `homelab` project, `prod` environment, `/authelia` (→ `authelia-secr
 | `ARGOCD_CLIENT_SECRET_DIGEST`  | `Digest` from `authelia crypto hash generate pbkdf2 --variant sha512 --random --random.length 72 --random.charset rfc3986`. The `Random Password` goes to `/argocd/oidc` |
 | `BESZEL_CLIENT_SECRET_DIGEST`  | `Digest` from the same command. The `Random Password` goes into Beszel (see `manifests/beszel/README.md`)                                                                |
 | `PGADMIN_CLIENT_SECRET_DIGEST` | `Digest` from the same command. The `Random Password` goes to `/pgadmin` as `PGADMIN_OIDC_CLIENT_SECRET`                                                                 |
+| `FORGEJO_CLIENT_SECRET_DIGEST` | `Digest` from the same command. The `Random Password` goes into Forgejo once (see `manifests/forgejo/README.md`)                                                         |
 
 Infisical `/argocd/oidc` (→ `argocd-oidc` in `argocd`):
 

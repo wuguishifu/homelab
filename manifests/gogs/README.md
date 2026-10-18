@@ -1,34 +1,42 @@
 # Gogs
 
-Self-hosted Git service at `https://git.wuguishifu.dev`.
+Being replaced by Forgejo (`manifests/forgejo/`). Gogs stays at `https://gogs.wuguishifu.dev`, behind
+Authelia, until its repositories are migrated and checked, then it gets removed.
 
-Registration is disabled. All new accounts must be created manually.
+`git.wuguishifu.dev` now points at Forgejo. Gogs can't do SSO, so its Ingress uses the Authelia
+forward-auth middleware, which also means git can't reach it over its hostname. Forgejo imports from
+the in-cluster Service (`http://gogs.gogs.svc.cluster.local:3000`) instead.
 
-## Secrets
+Registration is disabled. All configuration, including the database connection, was entered in the
+install wizard and lives in `/data/gogs/conf/app.ini` on the `gogs-data` PVC, not in this repo.
+Nothing reads Infisical.
 
-Add these to Infisical under the `homelab` project, `prod` environment, path `/gogs`:
+## Moving to gogs.wuguishifu.dev
 
-| Key                | Description                                                                    |
-| ------------------ | ------------------------------------------------------------------------------ |
-| `GOGS_DB_PASSWORD` | Password for the `gogs` PostgreSQL user                                        |
-| `GOGS_SECRET_KEY`  | Random string used for session security (generate with `openssl rand -hex 32`) |
+Gogs builds its links and login redirects from `DOMAIN` and `ROOT_URL`, so after the Ingress moved
+they need to change too (once):
 
-## Creating additional user accounts
-
-Since registration is disabled, new accounts must be created via the Gogs admin CLI:
-
-```bash
-kubectl exec -it -n gogs \
-  $(kubectl get pod -n gogs -l app=gogs -o jsonpath='{.items[0].metadata.name}') \
-  -- /app/gogs/gogs admin create-user \
-     --name <username> \
-     --password <password> \
-     --email <email> \
-     --admin
+```sh
+kubectl -n gogs exec deploy/gogs -- sed -i \
+  -e 's#^DOMAIN *=.*#DOMAIN = gogs.wuguishifu.dev#' \
+  -e 's#^ROOT_URL *=.*#ROOT_URL = https://gogs.wuguishifu.dev/#' \
+  /data/gogs/conf/app.ini
+kubectl -n gogs rollout restart deploy/gogs
 ```
 
-Remove `--admin` for a regular (non-admin) user.
+The init container hands `/data` back to uid 1000 on restart.
 
-## Re-enabling registration temporarily
+## Removing it
 
-You can toggle registration from the Gogs admin panel at `https://git.wuguishifu.dev/-/admin/config` without touching the config file.
+Once every repository is in Forgejo (`manifests/forgejo/README.md`):
+
+1. Keep a copy of the PVC outside the cluster. The `local-path` volume is deleted with its PVC.
+
+   ```sh
+   kubectl -n gogs exec deploy/gogs -- tar -C /data -czf - . > gogs-data.tar.gz
+   ```
+
+2. Follow `REMOVING-APPS.md` for `apps/sol/homelab/gogs.yaml` and this directory.
+3. If `app.ini`'s `[database]` points at the shared PostgreSQL, drop its database and role.
+4. Remove the Gogs entries from `manifests/authelia/README.md`, and the `[migrations]` variables from
+   `manifests/forgejo/deployment.yaml`.

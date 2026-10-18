@@ -1,0 +1,124 @@
+# app.ini lives on the PVC (custom/conf/app.ini), but the image rewrites it from the FORGEJO__*
+# variables below on every start, so this file is the source of truth for anything set here.
+# FORGEJO__<section>__<KEY>__FILE reads the value from a file.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: forgejo
+  namespace: forgejo
+  annotations:
+    secrets.infisical.com/auto-reload: "true"
+spec:
+  replicas: 1
+  # Two pods must never share the repositories.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: forgejo
+  template:
+    metadata:
+      labels:
+        app: forgejo
+    spec:
+      containers:
+        - name: forgejo
+          image: codeberg.org/forgejo/forgejo:15.0.10-rootless
+          env:
+            - name: FORGEJO__server__DOMAIN
+              value: git.wuguishifu.dev
+            - name: FORGEJO__server__ROOT_URL
+              value: https://git.wuguishifu.dev/
+            # HTTPS with access tokens only.
+            - name: FORGEJO__server__DISABLE_SSH
+              value: "true"
+            - name: FORGEJO__server__START_SSH_SERVER
+              value: "false"
+            - name: FORGEJO__server__LFS_START_SERVER
+              value: "false"
+
+            - name: FORGEJO__database__DB_TYPE
+              value: postgres
+            - name: FORGEJO__database__HOST
+              value: postgresql.databases.svc.cluster.local:5432
+            - name: FORGEJO__database__NAME
+              value: forgejo
+            - name: FORGEJO__database__USER
+              value: forgejo
+            - name: FORGEJO__database__PASSWD__FILE
+              value: /secrets/DB_PASSWORD
+
+            - name: FORGEJO__security__INSTALL_LOCK
+              value: "true"
+            # Encrypts 2FA secrets and the Authelia client secret in the database. Never change it.
+            - name: FORGEJO__security__SECRET_KEY__FILE
+              value: /secrets/SECRET_KEY
+
+            # Accounts come from `forgejo admin user create`, and SSO links to them (README.md).
+            - name: FORGEJO__service__DISABLE_REGISTRATION
+              value: "true"
+            - name: FORGEJO__service__REQUIRE_SIGNIN_VIEW
+              value: "true"
+            # Git and the API take access tokens, never the account password.
+            - name: FORGEJO__service__ENABLE_BASIC_AUTHENTICATION
+              value: "false"
+            - name: FORGEJO__oauth2_client__ENABLE_AUTO_REGISTRATION
+              value: "false"
+            - name: FORGEJO__openid__ENABLE_OPENID_SIGNIN
+              value: "false"
+            - name: FORGEJO__repository__FORCE_PRIVATE
+              value: "true"
+            # Where the backup CronJob looks for repositories.
+            - name: FORGEJO__repository__ROOT
+              value: /var/lib/gitea/git/repositories
+
+            # Keeps logins across restarts.
+            - name: FORGEJO__session__PROVIDER
+              value: db
+            - name: FORGEJO__actions__ENABLED
+              value: "false"
+            - name: FORGEJO__packages__ENABLED
+              value: "false"
+
+            # For importing from Gogs over the in-cluster Service (migrate-from-gogs.sh). Remove
+            # both once Gogs is gone.
+            - name: FORGEJO__migrations__ALLOW_LOCALNETWORKS
+              value: "true"
+            - name: FORGEJO__migrations__ALLOWED_DOMAINS
+              value: gogs.gogs.svc.cluster.local
+          ports:
+            - name: http
+              containerPort: 3000
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/gitea
+            - name: secrets
+              mountPath: /secrets
+              readOnly: true
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            # Headroom for git packing the 2 GB+ repositories.
+            limits:
+              memory: 2Gi
+          livenessProbe:
+            httpGet:
+              path: /api/healthz
+              port: 3000
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /api/healthz
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: forgejo-data
+        - name: secrets
+          secret:
+            secretName: forgejo-secrets

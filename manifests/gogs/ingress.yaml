@@ -1,3 +1,6 @@
+# Gogs moved here from git.wuguishifu.dev, which is now Forgejo. It stays until its repositories are
+# migrated (manifests/forgejo/README.md). Authelia sits in front because Gogs can't do SSO, which
+# also blocks git over this hostname. Forgejo imports through the in-cluster Service instead.
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -5,14 +8,15 @@ metadata:
   namespace: gogs
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-prod
+    traefik.ingress.kubernetes.io/router.middlewares: authelia-forwardauth@kubernetescrd
 spec:
   ingressClassName: traefik
   tls:
     - hosts:
-        - git.wuguishifu.dev
+        - gogs.wuguishifu.dev
       secretName: gogs-tls
   rules:
-    - host: git.wuguishifu.dev
+    - host: gogs.wuguishifu.dev
       http:
         paths:
           - path: /

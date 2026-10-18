@@ -131,3 +131,19 @@ identity_providers:
         access_token_signed_response_alg: none
         userinfo_signed_response_alg: none
         token_endpoint_auth_method: client_secret_basic
+      # Web UI only: git uses Forgejo access tokens (manifests/forgejo/README.md).
+      - client_id: forgejo
+        client_name: Forgejo
+        client_secret: {{ secret "/secrets/FORGEJO_CLIENT_SECRET_DIGEST" | msquote }}
+        public: false
+        authorization_policy: two_factor
+        require_pkce: true
+        pkce_challenge_method: S256
+        redirect_uris:
+          - https://git.wuguishifu.dev/user/oauth2/authelia/callback
+        scopes: [openid, email, profile, groups]
+        response_types: [code]
+        grant_types: [authorization_code]
+        access_token_signed_response_alg: none
+        userinfo_signed_response_alg: none
+        token_endpoint_auth_method: client_secret_basic

@@ -1,8 +1,18 @@
 # Garage
 
-Garage is the S3-compatible object store running in the `garage` namespace. The S3 API is exposed at `https://s3-dev.wuguishifu.dev` (Tailscale-only, like everything else behind Traefik).
+There are two Garage instances. Both are S3-compatible, use region `garage` and path-style
+addressing, and are reachable over Tailscale only:
 
-This in-cluster instance is the **dev** object store, hence the `-dev` hostnames. `s3.wuguishifu.dev` and `garage.wuguishifu.dev` are reserved for a planned production Garage on the TrueNAS box, outside this cluster.
+|            | S3 endpoint                     | Runs on                    | Managed                         |
+| ---------- | ------------------------------- | -------------------------- | ------------------------------- |
+| Production | `https://s3.wuguishifu.dev`     | TrueNAS, separate from sol | Outside this repo, on the NAS   |
+| Dev        | `https://s3-dev.wuguishifu.dev` | The `garage` namespace     | This repo (`manifests/garage/`) |
+
+Data worth keeping goes to production (jankbot, the Forgejo backups). The production
+hostnames have their own DNS records pointing at the NAS's Tailscale IP, so they skip the wildcard
+that sends `*.wuguishifu.dev` to sol, and pods on sol reach them over sol's Tailscale connection.
+
+The rest of this file is about the dev instance, the one in this cluster.
 
 ## Web UI
 
