@@ -79,13 +79,6 @@ spec:
               value: "false"
             - name: FORGEJO__packages__ENABLED
               value: "false"
-
-            # For importing from Gogs over the in-cluster Service (migrate-from-gogs.sh). Remove
-            # both once Gogs is gone.
-            - name: FORGEJO__migrations__ALLOW_LOCALNETWORKS
-              value: "true"
-            - name: FORGEJO__migrations__ALLOWED_DOMAINS
-              value: gogs.gogs.svc.cluster.local
           ports:
             - name: http
               containerPort: 3000
