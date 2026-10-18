@@ -14,7 +14,8 @@ set -eu
 
 : "${GOGS_TOKEN:?}" "${FORGEJO_TOKEN:?}"
 FORGEJO=${FORGEJO:-https://git.wuguishifu.dev}
-# Forgejo clones from this; it's in [migrations] ALLOWED_DOMAINS.
+# Forgejo calls Gogs' API here (it's in [migrations] ALLOWED_DOMAINS), but clones from the URL Gogs
+# reports, so Gogs' EXTERNAL_URL has to point here too while this runs (README.md).
 GOGS_INTERNAL=http://gogs.gogs.svc.cluster.local:3000
 
 # Gogs' Ingress is behind Authelia, so list its repositories through a port-forward.

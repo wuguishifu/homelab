@@ -13,16 +13,20 @@ Nothing reads Infisical.
 
 ## Moving to gogs.wuguishifu.dev
 
-Gogs builds its links and login redirects from `DOMAIN` and `ROOT_URL`, so after the Ingress moved
-they need to change too (once):
+Gogs builds its links, login redirects and the clone URLs in its API from `DOMAIN` and
+`EXTERNAL_URL` (`ROOT_URL` before Gogs 0.13). After the Ingress moved, they need to change too:
 
 ```sh
-kubectl -n gogs exec deploy/gogs -- sed -i \
+kubectl -n gogs exec deploy/gogs -c gogs -- sed -i -E \
   -e 's#^DOMAIN *=.*#DOMAIN = gogs.wuguishifu.dev#' \
-  -e 's#^ROOT_URL *=.*#ROOT_URL = https://gogs.wuguishifu.dev/#' \
+  -e 's#^EXTERNAL_URL *=.*#EXTERNAL_URL = https://gogs.wuguishifu.dev/#' \
   /data/gogs/conf/app.ini
 kubectl -n gogs rollout restart deploy/gogs
 ```
+
+While repositories are being imported into Forgejo, `EXTERNAL_URL` is set to
+`http://gogs.gogs.svc.cluster.local:3000/` instead (see `manifests/forgejo/README.md`), and the web
+UI's links point there until it's set back.
 
 The init container hands `/data` back to uid 1000 on restart.
 

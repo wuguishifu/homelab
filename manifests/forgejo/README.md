@@ -65,11 +65,24 @@ Do these in order. Authelia won't start without its new digest, so add it before
      --auto-discover-url https://auth.wuguishifu.dev/.well-known/openid-configuration \
      --scopes openid --scopes email --scopes profile --scopes groups \
      --group-claim-name groups --admin-group admins --skip-local-2fa
+   kubectl -n forgejo rollout restart deploy/forgejo
    ```
 
    The name has to stay `authelia`, because it's part of the redirect URI in Authelia's config.
-   The secret is stored only in the database (encrypted with `SECRET_KEY`). If it's lost, generate
-   a new pair and run `forgejo admin auth update-oauth`.
+   The secret is stored only in Forgejo's database, so restarting Forgejo doesn't pick up a new
+   one. To change it (after a new pair, or if login fails with `invalid_client`), update it and then
+   restart: the running server keeps the login sources it loaded at startup and doesn't see changes
+   made with the CLI.
+
+   ```sh
+   kubectl -n forgejo exec deploy/forgejo -- forgejo admin auth list   # the ID of `authelia`
+   kubectl -n forgejo exec deploy/forgejo -- forgejo admin auth update-oauth --id <id> --secret '<Random Password>'
+   kubectl -n forgejo rollout restart deploy/forgejo
+   ```
+
+   When the secret is wrong, Authelia logs two errors for each login:
+   `The provided client secret did not match`, then one about `client_secret_post`. Only the first
+   one is the real problem: Forgejo retries with the other method after the first fails.
 
 7. Log out and click **Sign in with authelia**. The first time, Forgejo asks you to link an
    existing account: sign in with the local password and TOTP. After that, Authelia logs you
@@ -81,6 +94,10 @@ Do these in order. Authelia won't start without its new digest, so add it before
 milestones and wikis. It doesn't bring LFS objects. Forgejo clones from Gogs' in-cluster Service,
 which `[migrations]` in `deployment.yaml` allows.
 
+Forgejo clones from the clone URL Gogs reports, not the address the script gives it, and Gogs builds
+that from `EXTERNAL_URL`. With `https://gogs.wuguishifu.dev/`, the clone would hit Authelia. So
+point it at the Service while importing (this breaks the Gogs web UI's links until step 6).
+
 1. In Gogs (`https://gogs.wuguishifu.dev`), go to **Your Settings → Applications** and generate a token.
 2. Make a Forgejo token for the script:
 
@@ -89,9 +106,17 @@ which `[migrations]` in `deployment.yaml` allows.
      -u <username> -t gogs-migration --scopes write:repository,write:organization,read:user --raw
    ```
 
-3. Run the script: `GOGS_TOKEN=... FORGEJO_TOKEN=... ./manifests/forgejo/migrate-from-gogs.sh`.
+3. Point Gogs at its Service:
+
+   ```sh
+   kubectl -n gogs exec deploy/gogs -c gogs -- sed -i -E \
+     's#^EXTERNAL_URL *=.*#EXTERNAL_URL = http://gogs.gogs.svc.cluster.local:3000/#' /data/gogs/conf/app.ini
+   kubectl -n gogs rollout restart deploy/gogs && kubectl -n gogs rollout status deploy/gogs
+   ```
+
+4. Run the script: `GOGS_TOKEN=... FORGEJO_TOKEN=... ./manifests/forgejo/migrate-from-gogs.sh`.
    Large repositories take a while each.
-4. Check that every branch and tag made it. For each repository, these two lists should match:
+5. Check that every branch and tag made it. For each repository, these two lists should match:
 
    ```sh
    kubectl -n gogs port-forward svc/gogs 3001:3000 &
@@ -99,7 +124,8 @@ which `[migrations]` in `deployment.yaml` allows.
    git ls-remote "https://<username>:$FORGEJO_TOKEN@git.wuguishifu.dev/<owner>/<repo>.git" | sort
    ```
 
-5. Delete both tokens: Gogs under **Applications**, Forgejo under **Settings → Applications**.
+6. Set `EXTERNAL_URL` back to `https://gogs.wuguishifu.dev/` (`manifests/gogs/README.md`).
+7. Delete both tokens: Gogs under **Applications**, Forgejo under **Settings → Applications**.
 
 Once you're done with Gogs, `manifests/gogs/README.md` says how to remove it.
 
