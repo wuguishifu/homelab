@@ -3,8 +3,8 @@
 Single sign-on at `https://auth.wuguishifu.dev` (tailnet only, like everything on `*.wuguishifu.dev`).
 It is an OpenID Connect provider for apps that support OIDC (ArgoCD, Beszel, pgAdmin, Forgejo) and a
 Traefik forward-auth endpoint in front of apps that don't: RedisInsight, Garage WebUI, thermo-automation
-and backup-manager (no login of their own), Redash (which takes the user from the `Remote-Email`
-header), and Gogs until it's removed (in front of its own login).
+and backup-manager (no login of their own), and Redash (which takes the user from the
+`Remote-Email` header).
 
 One stateless Deployment. Users are a YAML file in Infisical (no admin UI). Passkeys, TOTP devices
 and OIDC consents live in the `authelia` database on the shared PostgreSQL. Sessions live in Redis DB 2

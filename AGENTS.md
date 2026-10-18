@@ -50,7 +50,6 @@ apps/                        # ArgoCD Application resources (App-of-Apps pattern
       redash.yaml            # Redash at redash.wuguishifu.dev (uses the `redash` database)
       beszel.yaml            # Beszel resource monitoring for sol at beszel.wuguishifu.dev
       forgejo.yaml           # Forgejo private git hosting at git.wuguishifu.dev (uses the `forgejo` database)
-      gogs.yaml              # Gogs at gogs.wuguishifu.dev, being replaced by Forgejo
 
 manifests/                   # Kubernetes manifests applied by ArgoCD apps
   argocd-config/             # ArgoCD ingress, insecure mode, and SSO (argocd-cm, argocd-rbac-cm)
@@ -67,7 +66,7 @@ manifests/                   # Kubernetes manifests applied by ArgoCD apps
   cloudflared/               # Cloudflare Tunnel connector Deployment
   redash/                    # Redash server, scheduler and worker, Service and tailnet Ingress
   beszel/                    # Beszel hub (UI + metric history) and the agent on sol's host network
-  forgejo/                   # Forgejo, its backup CronJob (to the NAS's Garage) and the Gogs import script
+  forgejo/                   # Forgejo and its backup CronJob (to the NAS's Garage)
   databases-backup/          # Backup CronJobs and config
   universe-db/               # Migration Job for the `universe` database (see its README)
 

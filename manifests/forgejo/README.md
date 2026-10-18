@@ -1,8 +1,8 @@
 # Forgejo
 
 Private git hosting at `https://git.wuguishifu.dev` (tailnet only, like everything on
-`*.wuguishifu.dev`), replacing Gogs (`manifests/gogs/`). Every repository is private, registration
-is off, and there is no SSH, LFS, Actions or package registry.
+`*.wuguishifu.dev`). Every repository is private, registration is off, and there is no SSH, LFS,
+Actions or package registry.
 
 One Deployment on the `forgejo-data` PVC (repositories, plus `custom/conf/app.ini`, which the image
 regenerates from the `FORGEJO__*` variables in `deployment.yaml` on every start). Users, tokens,
@@ -24,8 +24,8 @@ To upgrade, bump the image tag in `deployment.yaml`. It's on the 15.x LTS line, 
 
 In Forgejo, go to **Settings → Applications → Generate new token** and give it read and write
 on **repository**. macOS git keeps it in the keychain (`credential.helper osxkeychain`), so it's
-entered once: username = your Forgejo username, password = the token. Remotes keep the Gogs URLs
-(`https://git.wuguishifu.dev/<owner>/<repo>.git`), because owners and names carry over.
+entered once: username = your Forgejo username, password = the token. Remotes look like
+`https://git.wuguishifu.dev/<owner>/<repo>.git`.
 
 ## Setup
 
@@ -43,10 +43,8 @@ Do these in order. Authelia won't start without its new digest, so add it before
 2. Add `/forgejo` and `/authelia`'s `FORGEJO_CLIENT_SECRET_DIGEST` to Infisical (see **Secrets**).
    Keep the digest's `Random Password` for step 6.
 3. Set up backups (see **Backups → Setup**).
-4. Push. Gogs moves to `gogs.wuguishifu.dev`. Fix its `app.ini` as `manifests/gogs/README.md`
-   describes.
-5. Create your account with the same username as in Gogs and the same email as in Authelia. Put
-   the printed password in Vaultwarden:
+4. Push.
+5. Create your account, with the same email as in Authelia. Put the printed password in Vaultwarden:
 
    ```sh
    kubectl -n forgejo exec deploy/forgejo -- forgejo admin user create --admin \
@@ -88,46 +86,10 @@ Do these in order. Authelia won't start without its new digest, so add it before
    existing account: sign in with the local password and TOTP. After that, Authelia logs you
    straight in.
 
-## Migrating from Gogs
+## History
 
-`migrate-from-gogs.sh` imports every repository your Gogs account can see, with issues, labels,
-milestones and wikis. It doesn't bring LFS objects. Forgejo clones from Gogs' in-cluster Service,
-which `[migrations]` in `deployment.yaml` allows.
-
-Forgejo clones from the clone URL Gogs reports, not the address the script gives it, and Gogs builds
-that from `EXTERNAL_URL`. With `https://gogs.wuguishifu.dev/`, the clone would hit Authelia. So
-point it at the Service while importing (this breaks the Gogs web UI's links until step 6).
-
-1. In Gogs (`https://gogs.wuguishifu.dev`), go to **Your Settings → Applications** and generate a token.
-2. Make a Forgejo token for the script:
-
-   ```sh
-   kubectl -n forgejo exec deploy/forgejo -- forgejo admin user generate-access-token \
-     -u <username> -t gogs-migration --scopes write:repository,write:organization,read:user --raw
-   ```
-
-3. Point Gogs at its Service:
-
-   ```sh
-   kubectl -n gogs exec deploy/gogs -c gogs -- sed -i -E \
-     's#^EXTERNAL_URL *=.*#EXTERNAL_URL = http://gogs.gogs.svc.cluster.local:3000/#' /data/gogs/conf/app.ini
-   kubectl -n gogs rollout restart deploy/gogs && kubectl -n gogs rollout status deploy/gogs
-   ```
-
-4. Run the script: `GOGS_TOKEN=... FORGEJO_TOKEN=... ./manifests/forgejo/migrate-from-gogs.sh`.
-   Large repositories take a while each.
-5. Check that every branch and tag made it. For each repository, these two lists should match:
-
-   ```sh
-   kubectl -n gogs port-forward svc/gogs 3001:3000 &
-   git ls-remote "http://$GOGS_TOKEN@localhost:3001/<owner>/<repo>.git" | sort
-   git ls-remote "https://<username>:$FORGEJO_TOKEN@git.wuguishifu.dev/<owner>/<repo>.git" | sort
-   ```
-
-6. Set `EXTERNAL_URL` back to `https://gogs.wuguishifu.dev/` (`manifests/gogs/README.md`).
-7. Delete both tokens: Gogs under **Applications**, Forgejo under **Settings → Applications**.
-
-Once you're done with Gogs, `manifests/gogs/README.md` says how to remove it.
+The repositories came from Gogs in October 2026, imported with issues, labels and milestones by
+`migrate-from-gogs.sh` (still in git history: `git log --all -- manifests/forgejo/migrate-from-gogs.sh`).
 
 ## Backups
 
