@@ -5,7 +5,7 @@ metadata:
   namespace: databases
 data:
   # Space-separated list of databases to back up
-  DATABASES: "thermo_automation"
+  DATABASES: "universe"
   POSTGRES_HOST: "postgresql.databases.svc.cluster.local"
   POSTGRES_PORT: "5432"
   POSTGRES_USER: "postgres"
