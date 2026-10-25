@@ -1,0 +1,3 @@
+kustomize:
+  images:
+  - ghcr.io/wuguishifu/universe/notifications-service@sha256:3cae6dee090673f7ac9d7feaca3326550b38e06774804676bb0fc2385dded96e
