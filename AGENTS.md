@@ -46,6 +46,7 @@ apps/                        # ArgoCD Application resources (App-of-Apps pattern
       analytics-service.yaml # universe analytics-service (uses the `universe` database)
       internet-monitor.yaml  # universe internet-monitor (records ISP outages via analytics-service)
       clipper-service.yaml   # universe clipper-service (finds moments in Medal clips with Gemini)
+      notifications-service.yaml # universe notifications-service (push notifications to phones; notifications.wuguishifu.dev)
       cloudflared.yaml       # Cloudflare Tunnel connector
       redash.yaml            # Redash at redash.wuguishifu.dev (uses the `redash` database)
       beszel.yaml            # Beszel resource monitoring for sol at beszel.wuguishifu.dev
@@ -63,6 +64,7 @@ manifests/                   # Kubernetes manifests applied by ArgoCD apps
   analytics-service/         # Deployment + in-cluster Service for analytics-service
   internet-monitor/          # Deployment + ConfigMap for internet-monitor
   clipper-service/           # Deployment, Service and tailnet Ingress for clipper-service
+  notifications-service/     # Deployment, Service and tailnet Ingress for notifications-service
   cloudflared/               # Cloudflare Tunnel connector Deployment
   redash/                    # Redash server, scheduler and worker, Service and tailnet Ingress
   beszel/                    # Beszel hub (UI + metric history) and the agent on sol's host network
@@ -88,7 +90,7 @@ Apps deploy in waves to respect dependencies:
 | 1    | cert-manager-config, coredns-config, postgresql, redis                                                                                                     |
 | 2    | argocd-config, infisical, infisical-operator                                                                                                               |
 | 3    | infisical-secrets, media-tools                                                                                                                             |
-| 4    | jankbot, cloudflared, universe-db, redash, beszel, authelia, forgejo                                                                                       |
+| 4    | jankbot, cloudflared, universe-db, redash, beszel, authelia, forgejo, notifications-service                                                                |
 | 5    | garage-webui (depends on garage), analytics-service, internet-monitor, clipper-service, thermo-automation, and other apps that use the `universe` database |
 
 ## Secrets Architecture

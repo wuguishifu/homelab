@@ -1,0 +1,82 @@
+# notifications-service's secrets, one per Infisical path in the app's secretsPaths
+# (universe platform/notifications/service/environment-config.json), plus prod Convex's. The shared /platform/*
+# groups are synced into this namespace rather than copied into the app's own path; see
+# manifests/notifications-service/README.md.
+apiVersion: secrets.infisical.com/v1alpha1
+kind: InfisicalSecret
+metadata:
+  name: notifications-service-redis
+  namespace: infisical-operator-system
+spec:
+  hostAPI: https://infisical.wuguishifu.dev/api
+  syncConfig:
+    resyncInterval: 60s
+
+  authentication:
+    universalAuth:
+      credentialsRef:
+        secretName: infisical-machine-identity
+        secretNamespace: infisical-operator-system
+      secretsScope:
+        projectSlug: universe
+        envSlug: prod
+        secretsPath: /platform/redis
+        recursive: false
+
+  managedSecretReference:
+    secretName: notifications-service-redis
+    secretNamespace: notifications-service
+    secretType: Opaque
+---
+# Not in the app's secretsPaths: locally, CONVEX_URL comes from the dev deployment (hasConvex).
+apiVersion: secrets.infisical.com/v1alpha1
+kind: InfisicalSecret
+metadata:
+  name: notifications-service-convex
+  namespace: infisical-operator-system
+spec:
+  hostAPI: https://infisical.wuguishifu.dev/api
+  syncConfig:
+    resyncInterval: 60s
+
+  authentication:
+    universalAuth:
+      credentialsRef:
+        secretName: infisical-machine-identity
+        secretNamespace: infisical-operator-system
+      secretsScope:
+        projectSlug: universe
+        envSlug: prod
+        secretsPath: /platform/convex/app
+        recursive: false
+
+  managedSecretReference:
+    secretName: notifications-service-convex
+    secretNamespace: notifications-service
+    secretType: Opaque
+---
+apiVersion: secrets.infisical.com/v1alpha1
+kind: InfisicalSecret
+metadata:
+  name: notifications-service-secrets
+  namespace: infisical-operator-system
+spec:
+  hostAPI: https://infisical.wuguishifu.dev/api
+  syncConfig:
+    resyncInterval: 60s
+
+  authentication:
+    universalAuth:
+      credentialsRef:
+        secretName: infisical-machine-identity
+        secretNamespace: infisical-operator-system
+      secretsScope:
+        projectSlug: universe
+        envSlug: prod
+        secretsPath: /platform/notifications/service
+        recursive: false
+
+  managedSecretReference:
+    secretName: notifications-service-secrets
+    secretNamespace: notifications-service
+    secretType: Opaque

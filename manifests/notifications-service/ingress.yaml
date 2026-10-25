@@ -1,0 +1,27 @@
+# Tailnet only, like everything on *.wuguishifu.dev: for apps outside the cluster (e.g. on the mini)
+# using NotificationsClient's http transport, and universe tools/scripts/notifications. Every route
+# but /api/health and /api/version needs API_TOKEN.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: notifications-service
+  namespace: notifications-service
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - notifications.wuguishifu.dev
+      secretName: notifications-service-tls
+  rules:
+    - host: notifications.wuguishifu.dev
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: notifications-service
+                port:
+                  number: 80

@@ -1,0 +1,58 @@
+# Sends push notifications to the phones running notifications-mobile. Callers add jobs to the
+# notifications-queue:notifications-send queue in the shared Redis (in-cluster apps) or POST them
+# to /api/notifications (anything else on the tailnet); the worker in the same pod looks up the
+# devices subscribed to the notification's channel in Convex and sends through Expo. A delayed job
+# on notifications-queue:notifications-receipts checks delivery 15 minutes later and removes
+# uninstalled devices.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notifications-service
+  namespace: notifications-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: notifications-service
+  template:
+    metadata:
+      labels:
+        app: notifications-service
+    spec:
+      containers:
+        - name: notifications-service
+          image: ghcr.io/wuguishifu/universe/notifications-service:latest
+          env:
+            - name: ENVIRONMENT
+              value: production
+          # In secretsPaths order (universe platform/notifications/service/environment-config.json):
+          # a key in a later source wins.
+          envFrom:
+            - secretRef:
+                name: notifications-service-redis
+            # CONVEX_URL; not a secretsPath, since locally it comes from hasConvex.
+            - secretRef:
+                name: notifications-service-convex
+            - secretRef:
+                name: notifications-service-secrets
+          ports:
+            - name: http
+              containerPort: 3011
+          resources:
+            requests:
+              cpu: 20m
+              memory: 96Mi
+            limits:
+              memory: 256Mi
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 3011
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 3011
+            initialDelaySeconds: 5
+            periodSeconds: 10

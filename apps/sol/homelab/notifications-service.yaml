@@ -1,0 +1,37 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: notifications-service
+  namespace: argocd
+  labels:
+    group: homelab
+  annotations:
+    # After redis and infisical-secrets; it doesn't use the `universe` database.
+    argocd.argoproj.io/sync-wave: "4"
+    argocd-image-updater.argoproj.io/image-list: "service=ghcr.io/wuguishifu/universe/notifications-service:latest"
+    argocd-image-updater.argoproj.io/service.update-strategy: digest
+    argocd-image-updater.argoproj.io/write-back-method: git:secret:argocd/argocd-image-updater-secret
+    argocd-image-updater.argoproj.io/git-branch: main
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/wuguishifu/homelab.git
+    targetRevision: HEAD
+    path: manifests/notifications-service
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: notifications-service
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 5m
