@@ -10,6 +10,8 @@ README in universe.
 It's reachable from the tailnet at `https://thermo.wuguishifu.dev`, behind Authelia's forward-auth
 (the app has no login of its own; see `manifests/authelia/README.md`). A Cloudflare Tunnel route
 straight to the Service would skip that login, so a public route has to go through Traefik.
+mcp-service calls the Service in-cluster for its `thermo_*` tools, behind its own sign-in
+(`manifests/mcp-service/README.md`).
 
 Image Updater pins the `thermo-automation-service` image's digest, so publishing a new image
 (merging to universe `main`, or **Deploy Server App** → `projects/thermo-automation/service`)

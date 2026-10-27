@@ -1,0 +1,7 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+# Image Updater writes its digest override to .argocd-source-mcp-service.yaml alongside this.
+# No Ingress: mcp.wuguishifu.dev is a Cloudflare Tunnel route straight to the Service (README.md).
+resources:
+  - deployment.yaml
+  - service.yaml

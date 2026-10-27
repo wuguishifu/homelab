@@ -1,0 +1,54 @@
+# mcp-service's secrets, one per Infisical path in the app's secretsPaths
+# (universe platform/mcp/service/environment-config.json). The shared /platform/* groups are synced into
+# this namespace rather than copied into the app's own path; see manifests/mcp-service/README.md.
+apiVersion: secrets.infisical.com/v1alpha1
+kind: InfisicalSecret
+metadata:
+  name: mcp-service-redis
+  namespace: infisical-operator-system
+spec:
+  hostAPI: https://infisical.wuguishifu.dev/api
+  syncConfig:
+    resyncInterval: 60s
+
+  authentication:
+    universalAuth:
+      credentialsRef:
+        secretName: infisical-machine-identity
+        secretNamespace: infisical-operator-system
+      secretsScope:
+        projectSlug: universe
+        envSlug: prod
+        secretsPath: /platform/redis
+        recursive: false
+
+  managedSecretReference:
+    secretName: mcp-service-redis
+    secretNamespace: mcp-service
+    secretType: Opaque
+---
+apiVersion: secrets.infisical.com/v1alpha1
+kind: InfisicalSecret
+metadata:
+  name: mcp-service-secrets
+  namespace: infisical-operator-system
+spec:
+  hostAPI: https://infisical.wuguishifu.dev/api
+  syncConfig:
+    resyncInterval: 60s
+
+  authentication:
+    universalAuth:
+      credentialsRef:
+        secretName: infisical-machine-identity
+        secretNamespace: infisical-operator-system
+      secretsScope:
+        projectSlug: universe
+        envSlug: prod
+        secretsPath: /platform/mcp/service
+        recursive: false
+
+  managedSecretReference:
+    secretName: mcp-service-secrets
+    secretNamespace: mcp-service
+    secretType: Opaque

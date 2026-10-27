@@ -1,0 +1,15 @@
+# The Cloudflare Tunnel route for mcp.wuguishifu.dev points here:
+# http://mcp-service.mcp-service.svc.cluster.local.
+apiVersion: v1
+kind: Service
+metadata:
+  name: mcp-service
+  namespace: mcp-service
+spec:
+  selector:
+    app: mcp-service
+  ports:
+    - name: http
+      port: 80
+      targetPort: 3012
+      protocol: TCP

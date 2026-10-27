@@ -1,10 +1,10 @@
 # Authelia
 
 Single sign-on at `https://auth.wuguishifu.dev` (tailnet only, like everything on `*.wuguishifu.dev`).
-It is an OpenID Connect provider for apps that support OIDC (ArgoCD, Beszel, pgAdmin, Forgejo) and a
-Traefik forward-auth endpoint in front of apps that don't: RedisInsight, Garage WebUI, thermo-automation
-and backup-manager (no login of their own), and Redash (which takes the user from the
-`Remote-Email` header).
+It is an OpenID Connect provider for apps that support OIDC (ArgoCD, Beszel, pgAdmin, Forgejo,
+mcp-service) and a Traefik forward-auth endpoint in front of apps that don't: RedisInsight, Garage
+WebUI, thermo-automation and backup-manager (no login of their own), and Redash (which takes the
+user from the `Remote-Email` header).
 
 One stateless Deployment. Users are a YAML file in Infisical (no admin UI). Passkeys, TOTP devices
 and OIDC consents live in the `authelia` database on the shared PostgreSQL. Sessions live in Redis DB 2
@@ -63,6 +63,7 @@ Infisical `homelab` project, `prod` environment, `/authelia` (→ `authelia-secr
 | `BESZEL_CLIENT_SECRET_DIGEST`  | `Digest` from the same command. The `Random Password` goes into Beszel (see `manifests/beszel/README.md`)                                                                |
 | `PGADMIN_CLIENT_SECRET_DIGEST` | `Digest` from the same command. The `Random Password` goes to `/pgadmin` as `PGADMIN_OIDC_CLIENT_SECRET`                                                                 |
 | `FORGEJO_CLIENT_SECRET_DIGEST` | `Digest` from the same command. The `Random Password` goes into Forgejo once (see `manifests/forgejo/README.md`)                                                         |
+| `MCP_CLIENT_SECRET_DIGEST`     | `Digest` from the same command. The `Random Password` goes to universe `/platform/mcp/service` as `AUTHELIA_CLIENT_SECRET` (see `manifests/mcp-service/README.md`)       |
 
 Infisical `/argocd/oidc` (→ `argocd-oidc` in `argocd`):
 

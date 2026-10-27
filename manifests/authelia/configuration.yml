@@ -71,6 +71,15 @@ identity_providers:
         algorithm: RS256
         use: sig
         key: {{ secret "/secrets/OIDC_JWKS_KEY" | mindent 10 "|" | msquote }}
+    # Per-client policies, for clients only some users may sign in to.
+    authorization_policies:
+      # mcp-service hands out tokens that can change things in the house (thermostats), so only
+      # admins, with two factors.
+      mcp:
+        default_policy: deny
+        rules:
+          - policy: two_factor
+            subject: group:admins
     clients:
       - client_id: argocd
         client_name: Argo CD
@@ -142,6 +151,26 @@ identity_providers:
         redirect_uris:
           - https://git.wuguishifu.dev/user/oauth2/authelia/callback
         scopes: [openid, email, profile, groups]
+        response_types: [code]
+        grant_types: [authorization_code]
+        access_token_signed_response_alg: none
+        userinfo_signed_response_alg: none
+        token_endpoint_auth_method: client_secret_basic
+      # mcp-service is the OAuth server MCP clients (claude.ai, Claude Code) see, and hands the
+      # sign-in itself to Authelia through this client. Only the browser comes here: mcp-service
+      # reaches the token endpoint in-cluster, so Authelia stays tailnet-only. The localhost URI
+      # is for running mcp-service locally.
+      - client_id: mcp
+        client_name: MCP
+        client_secret: {{ secret "/secrets/MCP_CLIENT_SECRET_DIGEST" | msquote }}
+        public: false
+        authorization_policy: mcp
+        require_pkce: true
+        pkce_challenge_method: S256
+        redirect_uris:
+          - https://mcp.wuguishifu.dev/oauth/callback
+          - http://localhost:3012/oauth/callback
+        scopes: [openid]
         response_types: [code]
         grant_types: [authorization_code]
         access_token_signed_response_alg: none

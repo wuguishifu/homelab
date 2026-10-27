@@ -14,7 +14,7 @@ This repo is a GitOps homelab running on a single server, `sol`. ArgoCD runs on 
 | Infisical secrets-operator | Syncs secrets from Infisical → Kubernetes `Secret` objects           |
 | Authelia                   | SSO: OIDC provider and Traefik forward-auth at `auth.wuguishifu.dev` |
 
-The server is reachable over Tailscale only — no inbound ports are open. DNS for `wuguishifu.dev` is managed by Cloudflare with a wildcard A record pointing to the server's Tailscale IP (DNS only, not proxied). Nothing is currently public. A `cloudflared` Deployment in the cluster runs a Cloudflare Tunnel (an outbound connection to Cloudflare's edge) for exposing an app publicly: a tunnel public hostname gets a proxied CNAME that overrides the wildcard, and routes straight to the app's Service (bypassing Traefik). The tunnel is token-managed, so its routes live in the Cloudflare dashboard, not this repo.
+The server is reachable over Tailscale only — no inbound ports are open. DNS for `wuguishifu.dev` is managed by Cloudflare with a wildcard A record pointing to the server's Tailscale IP (DNS only, not proxied). The only public app is mcp-service (`mcp.wuguishifu.dev`, behind its own OAuth sign-in; see `manifests/mcp-service/README.md`). A `cloudflared` Deployment in the cluster runs a Cloudflare Tunnel (an outbound connection to Cloudflare's edge) for exposing an app publicly: a tunnel public hostname gets a proxied CNAME that overrides the wildcard, and routes straight to the app's Service (bypassing Traefik). The tunnel is token-managed, so its routes live in the Cloudflare dashboard, not this repo.
 
 ## Repo Structure
 
@@ -47,6 +47,7 @@ apps/                        # ArgoCD Application resources (App-of-Apps pattern
       internet-monitor.yaml  # universe internet-monitor (records ISP outages via analytics-service)
       clipper-service.yaml   # universe clipper-service (finds moments in Medal clips with Gemini)
       notifications-service.yaml # universe notifications-service (push notifications to phones; notifications.wuguishifu.dev)
+      mcp-service.yaml       # universe mcp-service (MCP server for claude.ai/Claude Code; public at mcp.wuguishifu.dev)
       cloudflared.yaml       # Cloudflare Tunnel connector
       redash.yaml            # Redash at redash.wuguishifu.dev (uses the `redash` database)
       beszel.yaml            # Beszel resource monitoring for sol at beszel.wuguishifu.dev
@@ -65,6 +66,7 @@ manifests/                   # Kubernetes manifests applied by ArgoCD apps
   internet-monitor/          # Deployment + ConfigMap for internet-monitor
   clipper-service/           # Deployment, Service and tailnet Ingress for clipper-service
   notifications-service/     # Deployment, Service and tailnet Ingress for notifications-service
+  mcp-service/               # Deployment and Service for mcp-service (public through the Cloudflare Tunnel)
   cloudflared/               # Cloudflare Tunnel connector Deployment
   redash/                    # Redash server, scheduler and worker, Service and tailnet Ingress
   beszel/                    # Beszel hub (UI + metric history) and the agent on sol's host network
@@ -84,14 +86,14 @@ minute and applies it, the same GitOps model as ArgoCD. See `hosts/mini/README.m
 
 Apps deploy in waves to respect dependencies:
 
-| Wave | Apps                                                                                                                                                       |
-| ---- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 0    | cert-manager                                                                                                                                               |
-| 1    | cert-manager-config, coredns-config, postgresql, redis                                                                                                     |
-| 2    | argocd-config, infisical, infisical-operator                                                                                                               |
-| 3    | infisical-secrets, media-tools                                                                                                                             |
-| 4    | jankbot, cloudflared, universe-db, redash, beszel, authelia, forgejo, notifications-service                                                                |
-| 5    | garage-webui (depends on garage), analytics-service, internet-monitor, clipper-service, thermo-automation, and other apps that use the `universe` database |
+| Wave | Apps                                                                                                                                                                                                |
+| ---- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 0    | cert-manager                                                                                                                                                                                        |
+| 1    | cert-manager-config, coredns-config, postgresql, redis                                                                                                                                              |
+| 2    | argocd-config, infisical, infisical-operator                                                                                                                                                        |
+| 3    | infisical-secrets, media-tools                                                                                                                                                                      |
+| 4    | jankbot, cloudflared, universe-db, redash, beszel, authelia, forgejo, notifications-service                                                                                                         |
+| 5    | garage-webui (depends on garage), analytics-service, internet-monitor, clipper-service, thermo-automation, and other apps that use the `universe` database, mcp-service (signs in through authelia) |
 
 ## Secrets Architecture
 

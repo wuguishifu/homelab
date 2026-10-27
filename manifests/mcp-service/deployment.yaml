@@ -1,0 +1,69 @@
+# Non-secret settings. Secrets come from Infisical; see README.md.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mcp-service-env
+  namespace: mcp-service
+data:
+  # Where MCP clients reach it, through the Cloudflare Tunnel. Also the OAuth issuer.
+  PUBLIC_URL: "https://mcp.wuguishifu.dev"
+  # Reached in-cluster through the CoreDNS rewrite (to Traefik), for the token exchange.
+  AUTHELIA_URL: "https://auth.wuguishifu.dev"
+  # The apps it has tools for, in-cluster (so past their Authelia forward-auth: the OAuth sign-in
+  # in front of /mcp stands in for it).
+  THERMO_AUTOMATION_SERVICE_URL: "http://thermo-automation.thermo-automation.svc.cluster.local"
+---
+# The MCP server for claude.ai and Claude Code: tools for the universe apps, behind its own OAuth
+# server, which hands the sign-in to Authelia. Codes, tokens and registered clients are in the shared
+# Redis, so the pod itself is stateless.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mcp-service
+  namespace: mcp-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mcp-service
+  template:
+    metadata:
+      labels:
+        app: mcp-service
+    spec:
+      containers:
+        - name: mcp-service
+          image: ghcr.io/wuguishifu/universe/mcp-service:latest
+          env:
+            - name: ENVIRONMENT
+              value: production
+          # In secretsPaths order (universe platform/mcp/service/environment-config.json): a key in
+          # a later source wins. The ConfigMap is last, so its settings win over Infisical.
+          envFrom:
+            - secretRef:
+                name: mcp-service-redis
+            - secretRef:
+                name: mcp-service-secrets
+            - configMapRef:
+                name: mcp-service-env
+          ports:
+            - name: http
+              containerPort: 3012
+          resources:
+            requests:
+              cpu: 20m
+              memory: 96Mi
+            limits:
+              memory: 256Mi
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 3012
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 3012
+            initialDelaySeconds: 5
+            periodSeconds: 10
