@@ -12,6 +12,7 @@ data:
   # The apps it has tools for, in-cluster (so past their Authelia forward-auth: the OAuth sign-in
   # in front of /mcp stands in for it).
   THERMO_AUTOMATION_SERVICE_URL: "http://thermo-automation.thermo-automation.svc.cluster.local"
+  MEGA_CLIENT_SERVICE_URL: "https://mega.wuguishifu.dev"
 ---
 # The MCP server for claude.ai and Claude Code: tools for the universe apps, behind its own OAuth
 # server, which hands the sign-in to Authelia. Codes, tokens and registered clients are in the shared
