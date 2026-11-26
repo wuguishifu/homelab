@@ -33,6 +33,7 @@ apps/                        # ArgoCD Application resources (App-of-Apps pattern
       postgresql.yaml        # Shared Bitnami PostgreSQL (namespace: databases); tailnet: postgres.wuguishifu.dev:5432
       redis.yaml             # Shared Bitnami Redis (namespace: databases); tailnet: redis.wuguishifu.dev:6379
       pgadmin.yaml
+      bull-board.yaml        # Bull Board UI for the BullMQ queues in the shared Redis at bull.wuguishifu.dev
       databases-backup.yaml
       universe-db.yaml       # Runs universe monorepo drizzle migrations on the `universe` database
     system/
@@ -71,6 +72,7 @@ manifests/                   # Kubernetes manifests applied by ArgoCD apps
   redash/                    # Redash server, scheduler and worker, Service and tailnet Ingress
   beszel/                    # Beszel hub (UI + metric history) and the agent on sol's host network
   forgejo/                   # Forgejo and its backup CronJob (to the NAS's Garage)
+  bull-board/                # Bull Board Deployment, Service and tailnet Ingress (queue prefixes in its ConfigMap)
   databases-backup/          # Backup CronJobs and config
   universe-db/               # Migration Job for the `universe` database (see its README)
 
@@ -92,7 +94,7 @@ Apps deploy in waves to respect dependencies:
 | 1    | cert-manager-config, coredns-config, postgresql, redis                                                                                                                                              |
 | 2    | argocd-config, infisical, infisical-operator                                                                                                                                                        |
 | 3    | infisical-secrets, media-tools                                                                                                                                                                      |
-| 4    | jankbot, cloudflared, universe-db, redash, beszel, authelia, forgejo, notifications-service                                                                                                         |
+| 4    | jankbot, cloudflared, universe-db, redash, beszel, authelia, forgejo, notifications-service, bull-board                                                                                             |
 | 5    | garage-webui (depends on garage), analytics-service, internet-monitor, clipper-service, thermo-automation, and other apps that use the `universe` database, mcp-service (signs in through authelia) |
 
 ## Secrets Architecture

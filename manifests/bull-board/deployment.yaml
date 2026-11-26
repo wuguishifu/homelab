@@ -1,0 +1,62 @@
+# Non-secret settings. The Redis URL comes from Infisical's shared /platform/redis; see README.md.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: bull-board-env
+  namespace: bull-board
+data:
+  # Key prefixes to discover queues under (every <prefix>:<queue>:meta key in Redis DB 0). No
+  # wildcards, so a new prefix has to be added here. Leaves out `bull`, Infisical's own queues.
+  BULL_BOARD_PREFIX: jankbot-queue,clipper-queue,notifications-queue,transcription-worker-queue
+  # Rescan for new queues (e.g. a new jankbot voice-commands-<bot>) every 30s.
+  BULL_BOARD_SCAN_INTERVAL: "30"
+  BULL_BOARD_BOARD_TITLE: sol queues
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bull-board
+  namespace: bull-board
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bull-board
+  template:
+    metadata:
+      labels:
+        app: bull-board
+    spec:
+      containers:
+        - name: bull-board
+          image: ghcr.io/felixmosh/bull-board:9.14.0
+          env:
+            # The universe services' own URL, so the board sees exactly what they do. BullMQ there
+            # ignores any /db in it, so it must stay on DB 0.
+            - name: BULL_BOARD_REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: bull-board-redis
+                  key: REDIS_URL
+          envFrom:
+            - configMapRef:
+                name: bull-board-env
+          ports:
+            - name: http
+              containerPort: 3000
+          resources:
+            requests:
+              cpu: 20m
+              memory: 96Mi
+            limits:
+              memory: 256Mi
+          livenessProbe:
+            tcpSocket:
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          readinessProbe:
+            tcpSocket:
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 10

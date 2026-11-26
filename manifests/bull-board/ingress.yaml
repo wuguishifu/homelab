@@ -1,0 +1,27 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: bull-board
+  namespace: bull-board
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    # Authelia login in front (manifests/authelia/middleware.yaml). The board can retry, promote
+    # and delete jobs and has no login of its own, so this is its only access control.
+    traefik.ingress.kubernetes.io/router.middlewares: authelia-forwardauth@kubernetescrd
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - bull.wuguishifu.dev
+      secretName: bull-board-tls
+  rules:
+    - host: bull.wuguishifu.dev
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: bull-board
+                port:
+                  number: 80

@@ -1,0 +1,27 @@
+# The shared Redis URL the universe services use, synced into bull-board's namespace; see
+# manifests/bull-board/README.md.
+apiVersion: secrets.infisical.com/v1alpha1
+kind: InfisicalSecret
+metadata:
+  name: bull-board-redis
+  namespace: infisical-operator-system
+spec:
+  hostAPI: https://infisical.wuguishifu.dev/api
+  syncConfig:
+    resyncInterval: 60s
+
+  authentication:
+    universalAuth:
+      credentialsRef:
+        secretName: infisical-machine-identity
+        secretNamespace: infisical-operator-system
+      secretsScope:
+        projectSlug: universe
+        envSlug: prod
+        secretsPath: /platform/redis
+        recursive: false
+
+  managedSecretReference:
+    secretName: bull-board-redis
+    secretNamespace: bull-board
+    secretType: Opaque
