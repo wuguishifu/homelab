@@ -27,6 +27,9 @@ spec:
       labels:
         app: bull-board
     spec:
+      # Kubernetes injects BULL_BOARD_PORT=tcp://<ip>:80 for the bull-board Service, which the CLI
+      # reads as its listen port ("Invalid port"). Nothing here uses the injected service vars.
+      enableServiceLinks: false
       containers:
         - name: bull-board
           image: ghcr.io/felixmosh/bull-board:9.14.0
