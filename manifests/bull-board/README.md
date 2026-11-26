@@ -13,6 +13,7 @@ wildcards.
 | `clipper-queue`                                | clipper-service                                                    |
 | `notifications-queue`                          | notifications-service and its clients                              |
 | `transcription-worker-queue`                   | transcription-worker on the mini and its clients                   |
+| `ffmpeg-worker-queue`                          | ffmpeg-worker on the mini and its clients                          |
 | `tungsten-queue`, `ruby-queue`, `silver-queue` | other projects                                                     |
 
 Infisical's own queues (prefix `bull`) are left out on purpose.

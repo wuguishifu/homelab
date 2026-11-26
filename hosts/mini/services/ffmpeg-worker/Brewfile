@@ -1,0 +1,2 @@
+# System dependencies for ffmpeg-worker, installed by reconcile.sh with `brew bundle`.
+brew "ffmpeg" # ffmpeg and ffprobe, with VideoToolbox (h264_videotoolbox, hevc_videotoolbox)
