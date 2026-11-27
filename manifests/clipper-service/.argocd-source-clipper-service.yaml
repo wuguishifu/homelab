@@ -1,3 +1,3 @@
 kustomize:
   images:
-  - ghcr.io/wuguishifu/universe/clipper-service@sha256:211f6aa4955a6f4e99a00acb79ee46425ccd9fc7c538d0fdf64729a80f303d47
+  - ghcr.io/wuguishifu/universe/clipper-service@sha256:c7703be0f4b9615b610f6232d4ca538ba721a6dcf035efcc6a4b62689b5dca4a
