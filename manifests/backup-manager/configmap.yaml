@@ -18,7 +18,7 @@ data:
           lifecycleRules:
             - prefix: 'hourly/'
               retentionPolicy: 'delete'
-              ttl: '7d'
+              ttl: '3d'
             - prefix: 'daily/'
               retentionPolicy: 'delete'
               ttl: '90d'
