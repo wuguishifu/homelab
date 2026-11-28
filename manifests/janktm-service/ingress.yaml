@@ -1,0 +1,26 @@
+# Tailnet only, like everything on *.wuguishifu.dev: for starting scans and reprocessing (curl now,
+# an admin page later). Every route but /api/health and /api/version needs API_TOKEN.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: janktm-service
+  namespace: janktm-service
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - janktm.wuguishifu.dev
+      secretName: janktm-service-tls
+  rules:
+    - host: janktm.wuguishifu.dev
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: janktm-service
+                port:
+                  number: 80

@@ -1,0 +1,78 @@
+# Non-secret settings. Secrets come from Infisical; see README.md.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: janktm-service-env
+  namespace: janktm-service
+data:
+  # In production Garage (the NAS), like everything /platform/s3 points at.
+  ALBUM_ORIGINALS_BUCKET: janktm-album
+  ALBUM_DERIVED_BUCKET: janktm-album-derived
+  # For capture times without an offset (most EXIF).
+  ALBUM_DEFAULT_TIME_ZONE: America/Los_Angeles
+  # Files whose metadata a scan reads at once (small ranged reads from Garage).
+  ALBUM_SCAN_CONCURRENCY: "8"
+---
+# The janktm photo album's backend: scans the originals bucket into Convex (album/* functions), and
+# queues each photo's and video's thumbnails, previews and hover loops on the ffmpeg worker on the
+# mini as BullMQ flows in the shared Redis. It never touches media itself: metadata comes from
+# ranged reads, and the site gets presigned URLs from Convex.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: janktm-service
+  namespace: janktm-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: janktm-service
+  template:
+    metadata:
+      labels:
+        app: janktm-service
+    spec:
+      # A scan or reprocess cut off here is retried by BullMQ and is safe to redo.
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: janktm-service
+          image: ghcr.io/wuguishifu/universe/janktm-service:latest
+          env:
+            - name: ENVIRONMENT
+              value: production
+          # In secretsPaths order (universe projects/janktm/service/environment-config.json): a
+          # key in a later source wins. The ConfigMap is last, so its settings win over Infisical.
+          envFrom:
+            - secretRef:
+                name: janktm-service-s3
+            - secretRef:
+                name: janktm-service-redis
+            # CONVEX_URL; not a secretsPath, since locally it comes from hasConvex.
+            - secretRef:
+                name: janktm-service-convex
+            - secretRef:
+                name: janktm-service-secrets
+            - configMapRef:
+                name: janktm-service-env
+          ports:
+            - name: http
+              containerPort: 3013
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              # A full scan holds the bucket's listing (~13k objects) and a batch's metadata.
+              memory: 512Mi
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 3013
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 3013
+            initialDelaySeconds: 5
+            periodSeconds: 10

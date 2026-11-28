@@ -7,7 +7,7 @@ metadata:
 data:
   # Key prefixes to discover queues under (every <prefix>:<queue>:meta key in Redis DB 0). No
   # wildcards, so a new prefix has to be added here. Leaves out `bull`, Infisical's own queues.
-  BULL_BOARD_PREFIX: jankbot-queue,clipper-queue,notifications-queue,transcription-worker-queue,ffmpeg-worker-queue
+  BULL_BOARD_PREFIX: jankbot-queue,clipper-queue,notifications-queue,transcription-worker-queue,ffmpeg-worker-queue,janktm-service-queue
   # Rescan for new queues (e.g. a new jankbot voice-commands-<bot>) every 30s.
   BULL_BOARD_SCAN_INTERVAL: "30"
   BULL_BOARD_BOARD_TITLE: sol queues

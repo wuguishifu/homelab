@@ -47,6 +47,7 @@ apps/                        # ArgoCD Application resources (App-of-Apps pattern
       analytics-service.yaml # universe analytics-service (uses the `universe` database)
       internet-monitor.yaml  # universe internet-monitor (records ISP outages via analytics-service)
       clipper-service.yaml   # universe clipper-service (finds moments in Medal clips with Gemini)
+      janktm-service.yaml    # universe janktm-service (janktm photo album: scans Garage into Convex, queues ffmpeg on the mini)
       notifications-service.yaml # universe notifications-service (push notifications to phones; notifications.wuguishifu.dev)
       mcp-service.yaml       # universe mcp-service (MCP server for claude.ai/Claude Code; public at mcp.wuguishifu.dev)
       cloudflared.yaml       # Cloudflare Tunnel connector
@@ -66,6 +67,7 @@ manifests/                   # Kubernetes manifests applied by ArgoCD apps
   analytics-service/         # Deployment + in-cluster Service for analytics-service
   internet-monitor/          # Deployment + ConfigMap for internet-monitor
   clipper-service/           # Deployment, Service and tailnet Ingress for clipper-service
+  janktm-service/            # Deployment, Service and tailnet Ingress for janktm-service
   notifications-service/     # Deployment, Service and tailnet Ingress for notifications-service
   mcp-service/               # Deployment and Service for mcp-service (public through the Cloudflare Tunnel)
   cloudflared/               # Cloudflare Tunnel connector Deployment
@@ -95,7 +97,7 @@ Apps deploy in waves to respect dependencies:
 | 2    | argocd-config, infisical, infisical-operator                                                                                                                                                        |
 | 3    | infisical-secrets, media-tools                                                                                                                                                                      |
 | 4    | jankbot, cloudflared, universe-db, redash, beszel, authelia, forgejo, notifications-service, bull-board                                                                                             |
-| 5    | garage-webui (depends on garage), analytics-service, internet-monitor, clipper-service, thermo-automation, and other apps that use the `universe` database, mcp-service (signs in through authelia) |
+| 5    | garage-webui (depends on garage), analytics-service, internet-monitor, clipper-service, janktm-service, thermo-automation, and other apps that use the `universe` database, mcp-service (signs in through authelia) |
 
 ## Secrets Architecture
 

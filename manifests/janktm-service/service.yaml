@@ -1,0 +1,15 @@
+# In-cluster: http://janktm-service.janktm-service.svc.cluster.local. From the tailnet, use the
+# Ingress (https://janktm.wuguishifu.dev).
+apiVersion: v1
+kind: Service
+metadata:
+  name: janktm-service
+  namespace: janktm-service
+spec:
+  selector:
+    app: janktm-service
+  ports:
+    - name: http
+      port: 80
+      targetPort: 3013
+      protocol: TCP

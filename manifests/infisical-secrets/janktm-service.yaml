@@ -1,0 +1,108 @@
+# janktm-service's secrets, one per Infisical path in the app's secretsPaths
+# (universe projects/janktm/service/environment-config.json), plus prod Convex's. The shared /platform/* groups are
+# synced into this namespace rather than copied into the app's own path; see
+# manifests/janktm-service/README.md.
+apiVersion: secrets.infisical.com/v1alpha1
+kind: InfisicalSecret
+metadata:
+  name: janktm-service-s3
+  namespace: infisical-operator-system
+spec:
+  hostAPI: https://infisical.wuguishifu.dev/api
+  syncConfig:
+    resyncInterval: 60s
+
+  authentication:
+    universalAuth:
+      credentialsRef:
+        secretName: infisical-machine-identity
+        secretNamespace: infisical-operator-system
+      secretsScope:
+        projectSlug: universe
+        envSlug: prod
+        secretsPath: /platform/s3
+        recursive: false
+
+  managedSecretReference:
+    secretName: janktm-service-s3
+    secretNamespace: janktm-service
+    secretType: Opaque
+---
+apiVersion: secrets.infisical.com/v1alpha1
+kind: InfisicalSecret
+metadata:
+  name: janktm-service-redis
+  namespace: infisical-operator-system
+spec:
+  hostAPI: https://infisical.wuguishifu.dev/api
+  syncConfig:
+    resyncInterval: 60s
+
+  authentication:
+    universalAuth:
+      credentialsRef:
+        secretName: infisical-machine-identity
+        secretNamespace: infisical-operator-system
+      secretsScope:
+        projectSlug: universe
+        envSlug: prod
+        secretsPath: /platform/redis
+        recursive: false
+
+  managedSecretReference:
+    secretName: janktm-service-redis
+    secretNamespace: janktm-service
+    secretType: Opaque
+---
+# Not in the app's secretsPaths: locally, CONVEX_URL comes from the dev deployment (hasConvex).
+apiVersion: secrets.infisical.com/v1alpha1
+kind: InfisicalSecret
+metadata:
+  name: janktm-service-convex
+  namespace: infisical-operator-system
+spec:
+  hostAPI: https://infisical.wuguishifu.dev/api
+  syncConfig:
+    resyncInterval: 60s
+
+  authentication:
+    universalAuth:
+      credentialsRef:
+        secretName: infisical-machine-identity
+        secretNamespace: infisical-operator-system
+      secretsScope:
+        projectSlug: universe
+        envSlug: prod
+        secretsPath: /platform/convex/app
+        recursive: false
+
+  managedSecretReference:
+    secretName: janktm-service-convex
+    secretNamespace: janktm-service
+    secretType: Opaque
+---
+apiVersion: secrets.infisical.com/v1alpha1
+kind: InfisicalSecret
+metadata:
+  name: janktm-service-secrets
+  namespace: infisical-operator-system
+spec:
+  hostAPI: https://infisical.wuguishifu.dev/api
+  syncConfig:
+    resyncInterval: 60s
+
+  authentication:
+    universalAuth:
+      credentialsRef:
+        secretName: infisical-machine-identity
+        secretNamespace: infisical-operator-system
+      secretsScope:
+        projectSlug: universe
+        envSlug: prod
+        secretsPath: /projects/janktm/service
+        recursive: false
+
+  managedSecretReference:
+    secretName: janktm-service-secrets
+    secretNamespace: janktm-service
+    secretType: Opaque
