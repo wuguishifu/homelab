@@ -1,3 +1,3 @@
 kustomize:
   images:
-  - ghcr.io/wuguishifu/universe/mcp-service@sha256:f010016b5bdd4aa2f31544dca5fbce31423e4b4511acc4a49a43b803e34917ca
+  - ghcr.io/wuguishifu/universe/mcp-service@sha256:2a0a4dcc746e547f704b4473776d7abc78ee624d34599518f680349cfe39d6bb
