@@ -1,3 +1,3 @@
 kustomize:
   images:
-  - ghcr.io/wuguishifu/universe/internet-monitor-service@sha256:b0622fddfff9c19b222bb7ef8440e05b6f2067f5a3dcd8c875884a2ec546f6e8
+  - ghcr.io/wuguishifu/universe/internet-monitor-service@sha256:3620ebca4f7ee609f83a930f08788e36fcd36180cb808c6fda74c154efb7f395
