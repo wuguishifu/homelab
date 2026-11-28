@@ -1,4 +1,4 @@
 # System dependencies for transcription-worker, installed by reconcile.sh with `brew bundle`.
-brew "ffmpeg"
+brew "ffmpeg-full" # keg-only, so config.env points at its bin
 brew "whisper-cpp" # Metal-accelerated whisper-cli
 brew "uv" # installs the diarizer's Python environment (pre-start.sh)

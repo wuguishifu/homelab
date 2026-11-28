@@ -101,4 +101,5 @@ bash ~/.homelab/repo/hosts/mini/reconcile.sh           # reconcile now instead o
 - **ffmpeg-worker**: ffmpeg jobs (mostly VideoToolbox encodes, which sol's CPU can't do) as a
   BullMQ worker. Like transcription-worker it takes jobs from sol's Redis and listens on no ports:
   each job downloads its inputs from S3 (garage) into `$SERVICE_DATA/work`, runs its ffmpeg steps
-  and uploads the outputs. Callers use universe's ffmpeg client. ffmpeg itself comes from Homebrew.
+  and uploads the outputs. Callers use universe's ffmpeg client. ffmpeg itself is Homebrew's
+  `ffmpeg-full` (keg-only, so `config.env` points at its bin).
