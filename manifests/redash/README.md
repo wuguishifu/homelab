@@ -3,7 +3,7 @@
 Redash at `https://redash.wuguishifu.dev` (tailnet only, like everything on `*.wuguishifu.dev`).
 
 Three Deployments run the `redash/redash` image: `redash-server` (web UI and API), `redash-scheduler`
-and `redash-worker` (runs queries off every queue). Its metadata (users, queries, dashboards, data
+and `redash-worker` (one rq worker that runs queries off every queue). Its metadata (users, queries, dashboards, data
 sources) lives in the `redash` database on the shared PostgreSQL, and its job queues in Redis DB 1
 on the shared Redis (Infisical uses DB 0).
 
