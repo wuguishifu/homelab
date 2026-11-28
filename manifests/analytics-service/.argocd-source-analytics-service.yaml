@@ -1,3 +1,3 @@
 kustomize:
   images:
-  - ghcr.io/wuguishifu/universe/analytics-service@sha256:cb97943e38c8a9a8508490e6e780ab173770f577862d215896baacf55a16c585
+  - ghcr.io/wuguishifu/universe/analytics-service@sha256:59f1b083935c13b63e4b7a31f952d36238cfcc2c5c55a8f8af325a75ab7b21be
