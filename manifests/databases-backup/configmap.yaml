@@ -4,8 +4,7 @@ metadata:
   name: backup-config
   namespace: databases
 data:
-  # Space-separated list of databases to back up
-  DATABASES: "universe"
+  # In-cluster PostgreSQL, which holds the sensitive databases below
   POSTGRES_HOST: "postgresql.databases.svc.cluster.local"
   POSTGRES_PORT: "5432"
   POSTGRES_USER: "postgres"
@@ -17,32 +16,27 @@ data:
   SENSITIVE_DATABASES: "infisicalDB vaultwarden authelia"
   SECRETS_R2_BUCKET: "secrets"
 
-  dump.sh: |
+  # The universe database lives on the NAS's PostgreSQL, not in-cluster. It is dumped as the
+  # `universe` role with UNIVERSE_DB_CONNECTION_STRING from /platform/postgres, the same secret
+  # the migrator uses, so the backup follows the database wherever that string points.
+  dump-universe.sh: |
     #!/bin/sh
     set -eu
-    for db in $DATABASES; do
-      echo "Dumping ${db}..."
-      PGPASSWORD="$POSTGRES_ADMIN_PASSWORD" pg_dump \
-        -h "$POSTGRES_HOST" \
-        -p "$POSTGRES_PORT" \
-        -U "$POSTGRES_USER" \
-        "$db" > "/backup/${db}.sql"
-      gzip "/backup/${db}.sql"
-      echo "Done: ${db}"
-    done
+    echo "Dumping universe..."
+    pg_dump "$UNIVERSE_DB_CONNECTION_STRING" > /backup/universe.sql
+    gzip /backup/universe.sql
+    echo "Done: universe"
 
-  upload.sh: |
+  upload-universe.sh: |
     #!/bin/sh
     set -eu
     TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)
     ENDPOINT="https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
-    for db in $DATABASES; do
-      echo "Uploading ${db}..."
-      aws s3 cp "/backup/${db}.sql.gz" \
-        "s3://${R2_BUCKET}/${BACKUP_PREFIX}/${db}/${TIMESTAMP}.sql.gz" \
-        --endpoint-url "$ENDPOINT"
-      echo "Uploaded: ${BACKUP_PREFIX}/${db}/${TIMESTAMP}.sql.gz"
-    done
+    echo "Uploading universe..."
+    aws s3 cp /backup/universe.sql.gz \
+      "s3://${R2_BUCKET}/${BACKUP_PREFIX}/universe/${TIMESTAMP}.sql.gz" \
+      --endpoint-url "$ENDPOINT"
+    echo "Uploaded: ${BACKUP_PREFIX}/universe/${TIMESTAMP}.sql.gz"
 
   dump-sensitive.sh: |
     #!/bin/sh

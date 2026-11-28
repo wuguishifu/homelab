@@ -1,3 +1,6 @@
+# Hourly dump of the universe database on the NAS (100.92.193.23) to R2's homelab-backups bucket,
+# under hourly/universe/. R2's lifecycle rule for hourly/ (set in the Cloudflare dashboard, not
+# here) deletes them after 3 days: ~72 dumps of a few MB each, well inside R2's 10 GB-month free tier.
 apiVersion: batch/v1
 kind: CronJob
 metadata:
@@ -5,6 +8,8 @@ metadata:
   namespace: databases
 spec:
   schedule: "0 * * * *"
+  # A dump that's still running when the next hour starts doesn't need a second one beside it.
+  concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 3
   failedJobsHistoryLimit: 3
   jobTemplate:
@@ -21,12 +26,12 @@ spec:
           initContainers:
             - name: dump
               image: postgres:18-alpine
-              command: ["sh", "/scripts/dump.sh"]
+              command: ["sh", "/scripts/dump-universe.sh"]
               envFrom:
-                - configMapRef:
-                    name: backup-config
+                # UNIVERSE_DB_CONNECTION_STRING, synced from /platform/postgres for the migrator
+                # (manifests/infisical-secrets/universe-db.yaml).
                 - secretRef:
-                    name: database-credentials
+                    name: universe-db-migrator-secrets
               volumeMounts:
                 - name: backup-data
                   mountPath: /backup
@@ -35,7 +40,7 @@ spec:
           containers:
             - name: upload
               image: amazon/aws-cli:latest
-              command: ["sh", "/scripts/upload.sh"]
+              command: ["sh", "/scripts/upload-universe.sh"]
               env:
                 - name: BACKUP_PREFIX
                   value: hourly
@@ -145,68 +150,6 @@ spec:
                     secretKeyRef:
                       name: databases-backup-secrets
                       key: S3_REGION
-              envFrom:
-                - configMapRef:
-                    name: backup-config
-                - secretRef:
-                    name: databases-backup-secrets
-              volumeMounts:
-                - name: backup-data
-                  mountPath: /backup
-                - name: scripts
-                  mountPath: /scripts
----
-apiVersion: batch/v1
-kind: CronJob
-metadata:
-  name: db-backup-daily
-  namespace: databases
-spec:
-  schedule: "0 2 * * *"
-  successfulJobsHistoryLimit: 3
-  failedJobsHistoryLimit: 3
-  jobTemplate:
-    spec:
-      template:
-        spec:
-          restartPolicy: OnFailure
-          volumes:
-            - name: backup-data
-              emptyDir: {}
-            - name: scripts
-              configMap:
-                name: backup-config
-          initContainers:
-            - name: dump
-              image: postgres:18-alpine
-              command: ["sh", "/scripts/dump.sh"]
-              envFrom:
-                - configMapRef:
-                    name: backup-config
-                - secretRef:
-                    name: database-credentials
-              volumeMounts:
-                - name: backup-data
-                  mountPath: /backup
-                - name: scripts
-                  mountPath: /scripts
-          containers:
-            - name: upload
-              image: amazon/aws-cli:latest
-              command: ["sh", "/scripts/upload.sh"]
-              env:
-                - name: BACKUP_PREFIX
-                  value: daily
-                - name: AWS_ACCESS_KEY_ID
-                  valueFrom:
-                    secretKeyRef:
-                      name: databases-backup-secrets
-                      key: R2_ACCESS_KEY_ID
-                - name: AWS_SECRET_ACCESS_KEY
-                  valueFrom:
-                    secretKeyRef:
-                      name: databases-backup-secrets
-                      key: R2_SECRET_ACCESS_KEY
               envFrom:
                 - configMapRef:
                     name: backup-config
