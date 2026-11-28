@@ -1,3 +1,3 @@
 kustomize:
   images:
-  - ghcr.io/wuguishifu/universe/thermo-automation-service@sha256:71c336e0c971b2cafb03a0e0d2c5423674c0011302be85b35ee1f6bfa2db530d
+  - ghcr.io/wuguishifu/universe/thermo-automation-service@sha256:5e15080d9bb5841473e0a09f23abe91d1e2e31572463d7ffa75e5d4d98464d36
